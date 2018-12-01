@@ -5,7 +5,9 @@ print(igraph.__version__)
 
 DEBUG1 = False
 DEBUG2 = False
-DEBUG3 = True
+DEBUG3 = False
+
+u_to_ind = {}
 
 def print_graph(names, connections, folder = '/home/san/Documents/university/babakov/lab2/testing/', filename = 'test0'):
     g = Graph().as_directed()
@@ -17,7 +19,7 @@ def print_graph(names, connections, folder = '/home/san/Documents/university/bab
                 g.add_edges([(i, j)])
     arrow_size = [1 for e in g. get_edgelist()]
     # print(arrow_size)
-    plot(g, folder+filename+'.pdf', layout=g.layout('fr'), vertex_label=names, edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
+    plot(g, folder+filename+'.pdf', layout=g.layout('fr'), vertex_label=[str(u_to_ind[e]) for e in names], edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
 def print_graph2(names1, names2, connections, folder = '/home/san/Documents/university/babakov/lab2/testing/', filename = 'test0'):
     g = Graph().as_directed()
     g.add_vertices(len(names1) + len(names2))
@@ -28,7 +30,7 @@ def print_graph2(names1, names2, connections, folder = '/home/san/Documents/univ
                 g.add_edges([(i, j + len(names1))])
     arrow_size = [1 for e in g. get_edgelist()]
     # print(arrow_size)
-    plot(g, folder+filename+'.pdf', layout=g.layout('fr'), vertex_label=names1+names2, edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
+    plot(g, folder+filename+'.pdf', layout=g.layout('fr'), vertex_label=[str(u_to_ind[e]) for e in names1+names2], edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
 
 if DEBUG1:
     print_graph(['a', 'b', 'c'], [[0, 1, 0], [1, 0, 0], [0, 0, 0]])
@@ -85,9 +87,12 @@ def get_pairs(names1, names2, connections):
                 pairs.append((names1[i], names2[j]))
     return pairs
 
-def save_to_file2(names1, names2, connections, description, folder_name = 'testing', pref=''):
+def save_to_file2(names1, names2, connections, description, folder_name = 'testing', pref='', singular=False):
     path = '/home/san/Documents/university/babakov/lab2/' + folder_name + '/'
-    print_graph2(names1, names2, connections, path, pref + 'graph')
+    if singular:
+        print_graph(names1, connections, path, pref+'graph')
+    else:
+        print_graph2(names1, names2, connections, path, pref + 'graph')
     pairs = get_pairs(names1, names2, connections)
     with open(path + pref + 'pairs.txt', 'w+') as f:
         f.write(str(pairs))
@@ -113,11 +118,14 @@ if DEBUG2:
     save_to_file2(t1, t2, connections)
 
 vowels = set()
-a = ord('a')
-z1 = ord('z')+1
+a = ord('а')
+# z1 = ord('я')+1
+z1 = ord('а')+11
+hui = 0
 while a<z1:
     vowels.add(chr(a))
-    a += 2
+    vowels.add(chr(ord('я') - (a - ord('а'))))
+    a += 1
 print(vowels)
 
 def str_to_int(name):
@@ -134,8 +142,28 @@ a = ['Велосипед', 'Самокат', 'Роликовые коньки', 
 b = ['Трамвай', 'Троллейбус', 'Поезд', 'Электричка', 'Самолёт', 'Баржа', 'Маршутное такси', 'Автобус']
 c = ['Галера', 'Каяка', 'Катамаран', 'Баржа', 'Яхта', 'Гидроцикл', 'Каравелла', 'Подводная лодка']
 d = ['Галера', 'Самолёт', 'Подводная лодка', 'БТР', 'Танк', 'Командно-штабная машина', 'Боевая машина огневой поддержки']
-u = set(a+b+c+d)
-print(u)
+u = list(set(a+b+c+d))
+u_int = [str_to_int(e) for e in u]
+e_to_int = {}
+for e in u:
+    e_to_int[e] = str_to_int(e)
+int_to_e = {}
+for k, v in e_to_int.items():
+    int_to_e[v] = k
+int_to_ind = {}
+for i, val in enumerate(sorted(int_to_e.keys())):
+    int_to_ind[val] = i
+ind_to_int = {}
+for k, v in int_to_ind.items():
+    ind_to_int[v] = k
+for i in range(len(u)):
+    u[i] = int_to_e[ind_to_int[i]]
+u_int = sorted(u_int)
+for i, e in enumerate(u):
+    u_to_ind[e] = i
+for i in range(len(u)):
+    if u_int[i] != str_to_int(u[i]):
+        print('hui')
 a_int = [str_to_int(e) for e in a]
 b_int = [str_to_int(e) for e in b]
 c_int = [str_to_int(e) for e in c]
@@ -224,3 +252,45 @@ save_to_file2(b, c, connections, description6, '6', pref='bc.')
 connections = create_connections_arr(c_int, d_int, fn)
 save_to_file2(c, d, connections, description6, '6', pref='cd.')
 
+def get_sorted_connections_to_next(my_ar):
+    good = {}
+    sorted_ar = sorted(my_ar)
+    for i in range(len(my_ar)):
+        good[sorted_ar[i]] = sorted_ar[(i+1)%len(my_ar)]
+    res = []
+    for e in my_ar:
+        res.append([])
+        for e2 in my_ar:
+            if e2 == good[e]:
+                res[-1].append(True)
+            else:
+                res[-1].append(False)
+    return res
+
+description71 = "xQx для любого x из заданного множества"
+description72 = "следующий элемент в отсортированном списке"
+all_true_fn = lambda x, y:True
+connections = create_connections(a_int, a_int, all_true_fn)
+save_to_file2(a, a, connections, description71, '7', pref='all.', singular=True)
+connections = get_sorted_connections_to_next(a_int)
+save_to_file2(a, a, connections, description72, '7', pref='next.', singular=True)
+
+connections = create_connections(b_int, b_int, all_true_fn)
+save_to_file2(b, b, connections, description71, '8', pref='all.', singular=True)
+connections = get_sorted_connections_to_next(b_int)
+save_to_file2(b, b, connections, description72, '8', pref='next.', singular=True)
+
+connections = create_connections(c_int, c_int, all_true_fn)
+save_to_file2(c, c, connections, description71, '9', pref='all.', singular=True)
+connections = get_sorted_connections_to_next(c_int)
+save_to_file2(c, c, connections, description72, '9', pref='next.', singular=True)
+
+connections = create_connections(d_int, d_int, all_true_fn)
+save_to_file2(d, d, connections, description71, '10', pref='all.', singular=True)
+connections = get_sorted_connections_to_next(d_int)
+save_to_file2(d, d, connections, description72, '10', pref='next.', singular=True)
+
+connections = create_connections(u_int, u_int, all_true_fn)
+save_to_file2(u, u, connections, description71, '11', pref='all.', singular=True)
+connections = get_sorted_connections_to_next(u_int)
+save_to_file2(u, u, connections, description72, '11', pref='next.', singular=True)
