@@ -18,6 +18,13 @@ class Graph:
             cnt += sum([len(e) if e is not None else 0 for e in arr])
         return cnt
 
+    def max_neighbours_nodes(self):
+        neighbours = {}
+        for i in range(len(self.nodes)):
+            neighbours[self.nodes[i]] = [self.nodes[j] for j in range(len(self.nodes)) if
+                                         self.nodes[i][j] is not None and self.nodes[i][j]]
+        return neighbours
+    
     def __init__(self, nodes, edges):
         self.nodes = nodes
         self.edges = edges
