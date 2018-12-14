@@ -18,7 +18,6 @@ def print_graph(names, connections, folder='/home/san/Documents/university/babak
             if connections[i][j]:
                 g.add_edges([(i, j)])
     arrow_size = [1 for e in g. get_edgelist()]
-    # print(arrow_size)
     plot(g, folder+filename+'.png', layout=g.layout('fr'), vertex_label=[str(u_to_ind[e]) for e in names],
          edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
 
@@ -33,7 +32,6 @@ def print_graph2(names1, names2, connections,
             if connections[i][j]:
                 g.add_edges([(i, j + len(names1))])
     arrow_size = [1 for e in g. get_edgelist()]
-    # print(arrow_size)
     plot(g, folder+filename+'.png', layout=g.layout('fr'), vertex_label=[str(u_to_ind[e]) for e in names1+names2],
          edge_arrow_size=arrow_size, arrow_size=arrow_size, edge_arrow_width=arrow_size)
 
@@ -147,28 +145,9 @@ a = ['Велосипед', 'Самокат', 'Роликовые коньки', 
 b = ['Трамвай', 'Троллейбус', 'Поезд', 'Электричка', 'Самолёт', 'Баржа', 'Маршутное такси', 'Автобус']
 c = ['Галера', 'Каяка', 'Катамаран', 'Баржа', 'Яхта', 'Гидроцикл', 'Каравелла', 'Подводная лодка']
 d = ['Галера', 'Самолёт', 'Подводная лодка', 'БТР', 'Танк', 'Командно-штабная машина', 'Боевая машина огневой поддержки']
-u = list(set(a+b+c+d))
+u = sorted([str_to_int(e) for e in set(a+b+c+d)], key=str_to_int)
 u_int = [str_to_int(e) for e in u]
-e_to_int = {}
-for e in u:
-    e_to_int[e] = str_to_int(e)
-int_to_e = {}
-for k, v in e_to_int.items():
-    int_to_e[v] = k
-int_to_ind = {}
-for i, val in enumerate(sorted(int_to_e.keys())):
-    int_to_ind[val] = i
-ind_to_int = {}
-for k, v in int_to_ind.items():
-    ind_to_int[v] = k
-for i in range(len(u)):
-    u[i] = int_to_e[ind_to_int[i]]
-u_int = sorted(u_int)
-for i, e in enumerate(u):
-    u_to_ind[e] = i
-for i in range(len(u)):
-    if u_int[i] != str_to_int(u[i]):
-        print('hui')
+u_to_ind = {e: i for i, e in enumerate(u_int)}
 for i, e in enumerate(u):
     print(str(i) + '\t' + str(e) + '\t\t' + str(str_to_int(e)))
 print(u)

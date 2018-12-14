@@ -27,22 +27,22 @@ def get_table(names1, names2, connections):
             result += ' ' * (pos - 1)
             result += str(connections[i][j])
             result += ' ' * (len(e2) - pos) if pos!=0 else ''
-    # for i in range(len(names1)):
-    #     for j in range(len(names2)):
-    #         result[(sm+1) * (j+1) + positions[i]] = '1' if connections[i][j] else '0'
     return result
+
 
 def my_not(a):
     # return chr(ord('z') - ord(a) + ord('a'))
     return '(not ' + a + ')'
 
+
 def to_bin_arr(num):
     res = []
     for i in range(5):
-        res.append(num%2)
+        res.append(num % 2)
         num = int(num/2)
     res = list(reversed(res))
     return res
+
 
 def to_bin_str(num):
     res = ''
@@ -54,12 +54,17 @@ def to_bin_str(num):
         res2 += res[4 - i]
     return res2
 
+
 def small_kyr(let):
     return ord(let) >= ord('а') and ord(let) <= ord('я')
 
+
 vowels = {'а', 'у', 'е', 'ы', 'о', 'э', 'я', 'и', 'ю'}
+
+
 def is_vowel(let):
     return let in vowels
+
 
 def get_sym(let):
     if not small_kyr(let):
@@ -68,10 +73,12 @@ def get_sym(let):
         return '1'
     else:
         return '0'
+
+
 def solve(names1):
     sz = len(names1)
     for i in range(sz, 32):
-        names1 += names1[i%sz]
+        names1 += names1[i % sz]
     names1 = list(names1)
 
     names2 = ['a', 'b', 'c', 'd', 'e', 'y1']
@@ -162,7 +169,7 @@ def solve(names1):
     fn = fn.replace('AND', 'and')
     print(fn + '\n')
 
-# (not a and not b and not c and not d and e) or (not a and not b and c and not d and not e) or (not a and not b and c and d and not e) or (not a and b and not c and d and e) or (not a and b and c and not d and e) or (not a and b and c and d and e) or (a and not b and not c and d and not e) or (a and not b and c and not d and e) or (a and not b and c and d and e) or (a and b and c and not d and not e) or (a and b and c and d and not e)
+
 solve('БаргоМаркИгоревич')
 solve('МаркИгоревичБарго')
 solve('ИгоревичБаргоМарк')

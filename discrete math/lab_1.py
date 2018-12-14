@@ -1,9 +1,9 @@
 
-def result_to_file(index, data, arr_logs=[]):
+def result_to_file(index, data, arr_logs=None):
     with open("/home/san/Documents/university/babakov/lab1/" + str(index), 'w') as f:
         for i, row in enumerate(data):
             f.write(str(row) + '\n')
-            if len(arr_logs) > i:
+            if arr_logs is not None and len(arr_logs) > i:
                 for e in arr_logs[i]:
                     f.write(e + '\n')
 
@@ -39,7 +39,7 @@ arr_logs = []
 logs = []
 
 
-def nt(x):
+def nt(x):  # not
     log = str(op_cnt[0]) + ') '
     log += 'not' + to_str(x) + ' = '
     op_cnt[0] += 1
@@ -52,7 +52,7 @@ def nt(x):
     return set(res)
 
 
-def un(*args):
+def un(*args):  # unite
     log = str(op_cnt[0]) + ') '
     op_cnt[0] += 1
     log += to_str(args[0])
@@ -68,7 +68,7 @@ def un(*args):
     return set(res)
 
 
-def its(*args):
+def its(*args):  # intersect
     log = str(op_cnt[0]) + ') '
     op_cnt[0] += 1
     log += to_str(args[0])
@@ -90,7 +90,7 @@ def its(*args):
     return res2
 
 
-def cmp(x, *args):
+def cmp(x, *args):  # complement
     log = str(op_cnt[0]) + ') '
     op_cnt[0] += 1
     log += to_str(x)
@@ -113,7 +113,7 @@ def sd_src(x, y):
     return cmp(un(x, y), its(x, y))
 
 
-def sd(*args):
+def sd(*args):  # symmetrical difference
     log = str(op_cnt[0]) + ') '
     op_cnt[0] += 1
     log += to_str(args[0])
