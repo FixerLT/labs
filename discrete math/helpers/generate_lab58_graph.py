@@ -1,4 +1,4 @@
-from my_graph import Graph
+from my_graph import LabGraph
 
 
 def get_distance_between_pubs(name1, name2):
@@ -28,4 +28,8 @@ def get_graph_for_topic_1():
         distances.append([])
         for j in range(len(nodes)):
             distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
-    return Graph(nodes, distances)
+    graph = LabGraph(nodes, distances)
+    graph.save_plot('/home/san/Documents/university/babakov/lab5/test/', 'topic1_source')
+    return LabGraph(nodes, distances)
+
+get_graph_for_topic_1()
