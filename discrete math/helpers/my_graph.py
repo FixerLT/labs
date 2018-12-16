@@ -37,7 +37,7 @@ def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style["vertex_label"] = g.vs["name"]
     visual_style["vertex_name"] = g.vs["name"]
     visual_style["edge_width"] = [0.1 * w for w in g.es['weight']]
-    visual_style["layout"] = g.layout('large')
+    visual_style["layout"] = g.layout('circle')
     visual_style["bbox"] = (1200, 1200)
     # shortest_length =
     visual_style['arrow_size'] = [0.5 for w in g.es['weight']]
@@ -74,6 +74,22 @@ class LabGraph:
                                          self.nodes[i][j] is not None and self.nodes[i][j]]
         return neighbours
 
+    def get_node_degrees(self):
+        degrees = {}
+        for i in range(len(self.nodes)):
+            degrees[i] = sum([len(e if e is not None else []) for e in self.edges[i]])
+            degrees[i] += sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
+            degrees[i] -= len(self.edges[i][i] if self.edges[i][i] is not None else [])
+        return degrees
+
+    def get_neighbours(self, node):
+        neighbours = set()
+        for i in range(len(self.nodes)):
+            if (self.edges[node][i] is not None and len(self.edges[node][i]) > 0) or \
+                    (self.edges_stash is not None and self.edges_stash[node][i] is not None and len(self.edges_stash[node][i]) > 0):
+                neighbours.add(i)
+        return neighbours
+
     def add_to_stash(self, e_stash=None, e_stash_list=None, size=None):
         if e_stash is not None:
             if self.edges_stash is None:
@@ -99,6 +115,20 @@ class LabGraph:
         self.edges_stash = None
         self.edges_stash_list = None
 
+    def remove_nodes(self, nodes):  # not appliable to stash
+        new_indexes = {}
+        for i in range(len(self.nodes)):
+            if i not in nodes:
+                new_indexes[i] = len(new_indexes)
+        new_edges_list = []
+        for edge in self.edges_list:
+            if not (edge[0] in nodes or edge[1] in nodes):
+                new_edges_list.append((new_indexes[edge[0]], new_indexes[edge[1]], edge[2]))
+        self.nodes = [e for i, e in enumerate(self.nodes) if i not in nodes]
+        self.edges_list = new_edges_list
+        self.edges = edges_list_to_table(self.edges_list, len(self.nodes))
+
+
     def save_plot(self, folder, filename):
         g = Graph().as_directed()
         g.add_vertices(len(self.nodes))
@@ -123,7 +153,46 @@ class LabGraph:
         visial_style = best_visual_style(g, len(self.edges), 0 if self.edges_stash is None else len(self.edges_stash), len(self.nodes))
         plot(g, folder+filename+'.png', **visial_style)
 
-    def __init__(self, nodes, edges=None, edges_list=None, size=None):
+    def get_shortest_path_by_edges_amount(self, start, end):
+        to_visit = [start]
+        visited = set()
+        parents = {start: None}
+        while len(to_visit) > 0:
+            node = to_visit[0]
+            to_visit.pop(0)
+            visited.add(node)
+            for neighbour in self.get_neighbours(node):
+                if neighbour == end:
+                    path = [end, node]
+                    while parents[node] is not None:
+                        node = parents[node]
+                        path.append(node)
+                    path = list(reversed(path))
+                    smallest = sum(self.edges[path[0]][path[1]])
+                    for i in range(1, len(path)-1):
+                        smallest = min(smallest, sum(self.edges[path[i]][path[i+1]]))
+                    return path, smallest
+                if neighbour not in visited and neighbour not in to_visit:
+                    to_visit.append(neighbour)
+                    parents[neighbour] = node
+        return None, None
+
+    def reduce_edges(self, path, val):
+        for i in range(len(path) - 1):
+            edge_from = path[i]
+            edge_to = path[i+1]
+            val_cp = val
+            while val_cp > 0:
+                if self.edges[edge_from][edge_to][-1] > val_cp:
+                    self.edges[edge_from][edge_to][-1] -= val_cp
+                    val_cp = 0
+                else:
+                    val_cp -= self.edges[edge_from][edge_to][-1]
+                    self.edges[edge_from][edge_to].pop(-1)
+            if len(self.edges[edge_from][edge_to]) == 0:
+                self.edges[edge_from][edge_to] = None
+
+    def __init__(self, nodes, edges=None, edges_list=None):
         self.nodes = nodes
         if edges is not None:
             self.edges = []
@@ -131,6 +200,6 @@ class LabGraph:
                 self.edges.append(e.copy())
             self.edges_list = table_to_edges_list(edges)
         else:
-            self.edges = edges_list_to_table(edges_list, size)
+            self.edges = edges_list_to_table(edges_list, len(nodes))
             self.edges_list = edges_list.copy()
 
