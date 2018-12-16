@@ -68,19 +68,32 @@ class LabGraph:
         return cnt
 
     def max_neighbours_nodes(self):
-        neighbours = {}
+        neighbours = []
         for i in range(len(self.nodes)):
-            neighbours[self.nodes[i]] = [self.nodes[j] for j in range(len(self.nodes)) if
-                                         self.nodes[i][j] is not None and self.nodes[i][j]]
+            neighbours.append([])
+            neighbours[-1] = [j for j in range(len(self.nodes)) if
+                              self.nodes[i][j] is not None or self.nodes[j][i] is not None]
         return neighbours
 
-    def get_node_degrees(self):
-        degrees = {}
+    def get_node_degrees(self, orientated=True):
+        degrees = []
         for i in range(len(self.nodes)):
-            degrees[i] = sum([len(e if e is not None else []) for e in self.edges[i]])
-            degrees[i] += sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
-            degrees[i] -= len(self.edges[i][i] if self.edges[i][i] is not None else [])
+            degrees.append([])
+            degrees[-1] = sum([len(e if e is not None else []) for e in self.edges[i]])
+            if orientated:
+                degrees[-1] += sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
+                degrees[-1] -= len(self.edges[i][i] if self.edges[i][i] is not None else [])
+            else:
+                if self.edges[i][i] is not None:
+                    degrees[-1] += len(self.edges[i][i])
         return degrees
+
+    def get_node_min_distances_to_neighbours(self, node):
+        distances = {}
+        for i in range(len(self.nodes)):
+            if self.edges[node][i] is not None and len(self.edges[node][i]) > 0:
+                distances[i] = min(self.edges[node][i])
+        return distances
 
     def get_neighbours(self, node):
         neighbours = set()
@@ -89,6 +102,23 @@ class LabGraph:
                     (self.edges_stash is not None and self.edges_stash[node][i] is not None and len(self.edges_stash[node][i]) > 0):
                 neighbours.add(i)
         return neighbours
+
+    def is_bridge(self, node1, node2, orientated=False):
+        if sum([1 for e in self.edges[node1] if e is None or len(e)==0]) >= len(self.nodes)-1:
+            return False
+        to_visit = [node2]
+        visited = set(to_visit)
+        while len(to_visit) > 0:
+            node = to_visit.pop()
+            for neighbour in self.get_neighbours(node):
+                if orientated or not(node == node2 and neighbour == node1):
+                    if neighbour == node1:
+                        return False
+                    if neighbour not in visited:
+                        to_visit.append(neighbour)
+                        visited.add(neighbour)
+        return True
+
 
     def add_to_stash(self, e_stash=None, e_stash_list=None, size=None):
         if e_stash is not None:
@@ -115,7 +145,7 @@ class LabGraph:
         self.edges_stash = None
         self.edges_stash_list = None
 
-    def unorientate(self, fn_connections=lambda e: e):
+    def unorientate(self):
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
                 if i==j:
@@ -126,6 +156,8 @@ class LabGraph:
                     self.edges[i][j] = self.edges[j][i].copy()
                 elif self.edges[j][i] is None:
                     self.edges[j][i] = self.edges[i][j].copy()
+
+    def apply_fn_to_edges(self, fn_connections):
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
                 if self.edges[i][j] is not None:
