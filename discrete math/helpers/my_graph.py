@@ -32,9 +32,10 @@ def table_to_edges_list(table):
 
 def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style = {}
-    visual_style["vertex_size"] = 20
+    visual_style["vertex_size"] = 40#20
     visual_style["vertex_color"] = ['pink' for gender in range(vertexes_sz)]
     visual_style["vertex_label"] = g.vs["name"]
+    visual_style["vertex_label_size"] = 28
     visual_style["vertex_name"] = g.vs["name"]
     visual_style["edge_width"] = [0.1 * abs(w) for w in g.es['weight']]
     visual_style["layout"] = g.layout('circle')
