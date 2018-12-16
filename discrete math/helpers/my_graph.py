@@ -115,6 +115,22 @@ class LabGraph:
         self.edges_stash = None
         self.edges_stash_list = None
 
+    def unorientate(self, fn_connections=lambda e: e):
+        for i in range(len(self.nodes)):
+            for j in range(len(self.nodes)):
+                if i==j:
+                    continue
+                if self.edges[i][j] is not None and self.edges[j][i] is not None:
+                    self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[i][j], self.edges[i][j] + self.edges[i][j]
+                elif self.edges[i][j] is None:
+                    self.edges[i][j] = self.edges[j][i].copy()
+                elif self.edges[j][i] is None:
+                    self.edges[j][i] = self.edges[i][j].copy()
+        for i in range(len(self.nodes)):
+            for j in range(len(self.nodes)):
+                if self.edges[i][j] is not None:
+                    self.edges[i][j] = fn_connections(self.edges[i][j])
+
     def remove_nodes(self, nodes):  # not appliable to stash
         new_indexes = {}
         for i in range(len(self.nodes)):
