@@ -36,12 +36,15 @@ def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style["vertex_color"] = ['pink' for gender in range(vertexes_sz)]
     visual_style["vertex_label"] = g.vs["name"]
     visual_style["vertex_name"] = g.vs["name"]
-    visual_style["edge_width"] = [0.1 * w for w in g.es['weight']]
+    visual_style["edge_width"] = [0.1 * abs(w) for w in g.es['weight']]
     visual_style["layout"] = g.layout('circle')
     visual_style["bbox"] = (1200, 1200)
     # shortest_length =
     visual_style['arrow_size'] = [0.5 for w in g.es['weight']]
     visual_style['edge_color'] = ['black' if i in range(edges_sz) else 'red' for i in range(edges_sz + stash_sz)]
+    for i, e in enumerate(g.es['weight']):
+        if e < 0:
+            visual_style['edge_color'][i] = 'blue'
     return visual_style
 
 
@@ -87,6 +90,9 @@ class LabGraph:
                     degrees[-1] += len(self.edges[i][i])
         return degrees
 
+    def count_nodes_outcoming_edges(self):
+        return [sum([len(e) for e in self.edges[i] if e is not None]) for i in range(len(self.nodes))]
+
     def get_node_min_distances_to_neighbours(self, node):
         distances = {}
         for i in range(len(self.nodes)):
@@ -117,7 +123,6 @@ class LabGraph:
                         to_visit.append(neighbour)
                         visited.add(neighbour)
         return True
-
 
     def add_to_stash(self, e_stash=None, e_stash_list=None, size=None):
         if e_stash is not None:
