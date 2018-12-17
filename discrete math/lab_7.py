@@ -2,6 +2,7 @@ from generate_lab58_graph import get_graph_for_topic_1
 from my_graph import LabGraph
 from data_structures import DisjointSetUnion
 from lab_8 import limit_nodes_by_degrees, save_graph_for_path
+import os
 
 
 def prima_solve(graph, log_folder=None):
@@ -25,6 +26,7 @@ def prima_solve(graph, log_folder=None):
         prima_g_connected.append(new_node)
         if log_folder is not None:
             prima_g.save_plot(log_folder, str(len(prima_g_connected) - 2) + '_tree_step')
+
 
 def kruskal_solve(graph, log_folder=None):
     graph.unorientate()
@@ -138,25 +140,36 @@ def hamilton_solve(graph, log_folder=None):
     return 'non-hamilton', None
 
 
-if __name__ == "__main__":
+def solve(log_folder):
     graph = get_graph_for_topic_1()
-    graph.save_plot('/home/san/Documents/university/babakov/lab7/', 'orientated_src')
-    graph.save_plot('/home/san/Documents/university/babakov/lab7/', 'non-orientated_src')
-    prima_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/prima/')
-    kruskal_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/kruskal/')
+    sub_folders = ['prima/', 'kruskal/', 'euler_not_orientated/', 'euler_orientated/', 'hamilton/']
+    for e in sub_folders:
+        if not os.path.exists(log_folder + e):
+            os.mkdir(log_folder + e)
+    prima_solve(graph, log_folder=log_folder + sub_folders[0])
+    kruskal_solve(graph, log_folder=log_folder + sub_folders[1])
     graph = get_graph_for_topic_1()
-    g_type, path = euler_path(graph, log_folder='/home/san/Documents/university/babakov/lab7/euler/', orientated=False)
+    g_type, path = euler_path(graph, log_folder=log_folder + sub_folders[2], orientated=False)
+    with open(log_folder + sub_folders[2] + 'euler_non_orientated_report.txt', 'w+') as f:
+        f.write('the type of non orientated graph is ' + g_type + '\n')
+        if path is not None:
+            f.write('euler path is: ' + str(path) + '\n')
     graph = get_graph_for_topic_1()
-    print(g_type)
-    print(path)
-    g_type, path = euler_path(graph, log_folder='/home/san/Documents/university/babakov/lab7/euler/', orientated=True)
-    graph = get_graph_for_topic_1()
-    print(g_type)
-    print(path)
+    g_type, path = euler_path(graph, log_folder=log_folder + sub_folders[3], orientated=True)
+    with open(log_folder + sub_folders[3] + 'euler_orientated_report.txt', 'w+') as f:
+        f.write('the type of orientated graph is ' + g_type + '\n')
+        if path is not None:
+            f.write('euler path is: ' + str(path) + '\n')
     graph = get_graph_for_topic_1()
     limit_nodes_by_degrees(graph, 7)
     graph.unorientate()
-    g_type, path = hamilton_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/hamilton/')
-    print(g_type)
-    print(path)
+    g_type, path = hamilton_solve(graph, log_folder=log_folder + sub_folders[4])
+    with open(log_folder + sub_folders[3] + 'euler_orientated_report.txt', 'w+') as f:
+        f.write('the type of graph is ' + g_type + '\n')
+        if path is not None:
+            f.write('hamilton path is: ' + str(path) + '\n')
+
+
+if __name__ == "__main__":
+    solve('/home/san/Documents/university/babakov/lab7/')
 
