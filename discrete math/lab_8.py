@@ -6,7 +6,7 @@ def limit_nodes_by_degrees(graph, limit):
     if len(graph.nodes) <= limit:
         return
     degrees = graph.get_node_degrees()
-    degrees = sorted(degrees.items(), key=lambda e: e[1])
+    degrees = sorted(enumerate(degrees), key=lambda e: e[1])
     graph.remove_nodes([e[0] for e in degrees[limit:]])
 
 
@@ -22,11 +22,15 @@ def find_start_end(graph, must_differ=False):
     return start, end
 
 
+def save_graph_for_path(path, folder, index, nodes_amount, flow=1, pref=''):
+    edges = [(path[i], path[i+1], flow) for i in range(len(path) - 1)]
+    path_graph = LabGraph([str(e) for e in range(nodes_amount)], edges_list=edges)
+    path_graph.save_plot(folder, pref + 'step_' + str(index) + '_path')
+
+
 def log_for_iteration(graph, path, flow, folder, index):
     graph.save_plot(folder, 'step_' + str(index) + '_graph')
-    edges = [(path[i], path[i+1], flow) for i in range(len(path) - 1)]
-    path_graph = LabGraph(graph.nodes, edges_list=edges)
-    path_graph.save_plot(folder, 'step_' + str(index) + '_path')
+    save_graph_for_path(path, folder, index, nodes_amount=len(graph.nodes), flow=flow)
 
 
 def solve(graph, log_folder=None, different_start_end=True):
