@@ -1,4 +1,4 @@
-from generate_lab58_graph import get_graph_for_topic_1
+from generate_lab58_graph import get_graph_for_topic_not_1
 
 
 def save_to_file(report, path, file_name):
@@ -8,8 +8,8 @@ def save_to_file(report, path, file_name):
         f.write(report)
 
 
-graph = get_graph_for_topic_1()
-path = "D:/Education/DonNU/Discrete math"#'/home/san/Documents/university/babakov/lab5/'
+graph = get_graph_for_topic_not_1()
+path = "D:/Education/DonNU/Discrete math"  # '/home/san/Documents/university/babakov/lab5/'
 
 task1 = 'Вершины: {}\nМощность: {}\n\nРёбра: {}\nМощность: {}\n\nДуги: {}\nМощность: {}\n\n'  # TODO distinguish Рёбра and Дуги
 task1 = task1.format(str(graph.nodes), len(graph.nodes), graph.edges_list, len(graph.edges_list), graph.edges_list, len(graph.edges_list))
@@ -18,7 +18,6 @@ save_to_file(task1, path, '1')
 
 adjacent_nodes = []
 for i in range(len(graph.nodes)):
-    #curr_adjacency = 0
     adjacent_nodes.append(set())
     for j in range(len(graph.nodes)):
         if len(graph.edges[i][j]) > 0:
@@ -109,6 +108,7 @@ task6 = task6.format(str(loop_count))
 save_to_file(task6, path, '6')
 
 #простым граф не может быть простым по условию (см. Лаб №0 п. 3)
+# давай делать скрипт lab_5 независимо от условия в 0 лабе второго семестра. Чтобы наш код определял тип для всех случаев
 s=""
 if loop_count == 0:
     s = "мультиграфом"
