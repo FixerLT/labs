@@ -1,6 +1,7 @@
 from generate_lab58_graph import get_graph_for_topic_1
 from my_graph import LabGraph
 from data_structures import DisjointSetUnion
+from lab_8 import limit_nodes_by_degrees, save_graph_for_path
 
 
 def prima_solve(graph, log_folder=None):
@@ -80,10 +81,10 @@ def euler_path(graph, log_folder=None, orientated=False):
                 if not graph.is_bridge(node, e, orientated=orientated):
                     path.append(e)
                     neighbour_sets[node].remove(e)
-                    neighbour_sets[e].remove(node)
                     graph.edges[node][e] = None
                     if not orientated:
                         graph.edges[e][node] = None
+                        neighbour_sets[e].remove(node)
                     found = True
                     break
         if not found:
@@ -92,8 +93,49 @@ def euler_path(graph, log_folder=None, orientated=False):
     return g_type, path
 
 
+def get_next_hamilton_node(graph, visited, start):
+    for j in range(start, len(graph.nodes)):
+        if graph.edges[visited[-1]][j] is not None and len(graph.edges[visited[-1]][j]) > 0 and j not in visited:
+            return j, j+1
+    return None, None
 
 
+def hamilton_solve(graph, log_folder=None):
+    ham_path = None
+    ham_loop = None
+    for e in range(len(graph.nodes)):
+        visited = [e]
+        starts = [0]
+        iteration_counter = 0
+        while len(visited) > 0:
+            if len(visited) == len(graph.nodes):
+                if graph.edges[visited[-1]][visited[0]] is not None and len(graph.edges[visited[-1]][visited[0]]) > 0:
+                    next_node, next_start = visited[0], 0
+                else:
+                    next_node, next_start = None, None
+            else:
+                next_node, next_start = get_next_hamilton_node(graph, visited, starts[-1])
+            if next_node is None:
+                visited.pop()
+                starts.pop()
+            else:
+                visited.append(next_node)
+                starts[-1] = next_start
+                starts.append(0)
+                save_graph_for_path(visited, log_folder, iteration_counter, len(graph.nodes), pref='node_' + str(e) + '_')
+                if len(visited) == len(graph.nodes):
+                    ham_path = visited.copy()
+                if len(visited) > len(graph.nodes):
+                    ham_loop = visited.copy()
+                    break
+            iteration_counter += 1
+        if ham_loop is not None:
+            break
+    if ham_loop is not None:
+        return 'hamilton', ham_loop
+    if ham_path is not None:
+        return 'semi-hamilton', ham_path
+    return 'non-hamilton', None
 
 
 if __name__ == "__main__":
@@ -103,6 +145,18 @@ if __name__ == "__main__":
     prima_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/prima/')
     kruskal_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/kruskal/')
     graph = get_graph_for_topic_1()
-    g_type, path = euler_path(graph, log_folder='/home/san/Documents/university/babakov/lab7/euler/')
+    g_type, path = euler_path(graph, log_folder='/home/san/Documents/university/babakov/lab7/euler/', orientated=False)
     graph = get_graph_for_topic_1()
+    print(g_type)
+    print(path)
+    g_type, path = euler_path(graph, log_folder='/home/san/Documents/university/babakov/lab7/euler/', orientated=True)
+    graph = get_graph_for_topic_1()
+    print(g_type)
+    print(path)
+    graph = get_graph_for_topic_1()
+    limit_nodes_by_degrees(graph, 7)
+    graph.unorientate()
+    g_type, path = hamilton_solve(graph, log_folder='/home/san/Documents/university/babakov/lab7/hamilton/')
+    print(g_type)
+    print(path)
 

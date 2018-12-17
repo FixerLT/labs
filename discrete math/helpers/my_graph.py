@@ -82,7 +82,6 @@ class LabGraph:
             degrees[-1] = sum([len(e if e is not None else []) for e in self.edges[i]])
             if orientated:
                 degrees[-1] += sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
-                degrees[-1] -= len(self.edges[i][i] if self.edges[i][i] is not None else [])
             else:
                 if self.edges[i][i] is not None:
                     degrees[-1] += len(self.edges[i][i])
