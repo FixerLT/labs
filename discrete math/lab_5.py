@@ -46,11 +46,14 @@ task4 = task4.format(str(len(isoted_nodes)), str(len(pendant_nodes)))
 save_to_file(task4, path, '4')
 
 max_degree = max([max([len(e) for e in row if e is not None]) for row in graph.edges])
-max_degree_edges_arrays = ([[(i, j, max_degree) for i in range(len(graph.nodes)) if graph.edges[i][j] is not None and len(graph.edges[i][j]) == max_degree] for j in range(len(graph.nodes))])
+max_degree_edges_arrays = ([[(i, j, max_degree)
+                             for i in range(len(graph.nodes)) if
+                                graph.edges[i][j] is not None and len(graph.edges[i][j]) == max_degree]
+                             for j in range(len(graph.nodes))])
 max_degree_edges = []
 for e in max_degree_edges_arrays:
     max_degree_edges.extend(e)
-task5 = 'Ребро {} -> {} имеет максимальную кратность({})'# TODO two or more edges have max multiplicity
+task5 = 'Ребро {} -> {} имеет максимальную кратность({})'
 task5 = apply_str_stub_to_array(task5, max_degree_edges) + '\n'
 save_to_file(task5, path, '5')
 

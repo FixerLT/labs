@@ -34,7 +34,11 @@ def get_graph_for_topic_1(test_save=None):
     nodes = ['Signal Bar', 'The Drinkery', 'Barrel Pub', 'BarDuck', 'Varvar Bar',
              'Beer.Live', 'Mugnum94', 'Pravda Beer Theatre', 'OLD BAR', 'Pilsner Bar',
              'Black Bull Bar', 'MumuBar', 'CRAFT vs PUB', 'Steam Pub', 'Porter Pub']
-    distances = make_distance_between_nodes(nodes)
+    distances = []
+    for i in range(len(nodes)):
+        distances.append([])
+        for j in range(len(nodes)):
+            distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
     graph = LabGraph(nodes, distances)
     if test_save is not None:
         graph.save_plot(test_save[0], test_save[1])
@@ -48,11 +52,7 @@ def get_graph_for_topic_not_1(test_save=None):
     nodes = ['Signal Bar', 'The Drinkery', 'Barrel Pub', 'BarDuck', 'Varvar Bar',
              'Beer.Live', 'Mugnum94', 'Pravda Beer Theatre', 'OLD BAR', 'Pilsner Bar',
              'Black Bull Bar', 'MumuBar', 'CRAFT vs PUB', 'Steam Pub', 'Porter Pub']
-    distances = []
-    for i in range(len(nodes)):
-        distances.append([])
-        for j in range(len(nodes)):
-            distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
+    distances = make_distance_between_nodes(nodes)
     graph = LabGraph(nodes, distances)
     if test_save is not None:
         graph.save_plot(test_save[0], test_save[1])

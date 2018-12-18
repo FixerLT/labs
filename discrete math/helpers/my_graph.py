@@ -33,7 +33,7 @@ def table_to_edges_list(table):
 def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style = {}
     visual_style["vertex_size"] = 40#20
-    visual_style["vertex_color"] = ['pink' for gender in range(vertexes_sz)]
+    visual_style["vertex_color"] = ['pink' for i in range(vertexes_sz)]
     visual_style["vertex_label"] = g.vs["name"]
     visual_style["vertex_label_size"] = 28
     visual_style["vertex_name"] = g.vs["name"]
@@ -110,7 +110,7 @@ class LabGraph:
         return neighbours
 
     def is_bridge(self, node1, node2, orientated=False):
-        if sum([1 for e in self.edges[node1] if e is None or len(e)==0]) >= len(self.nodes)-1:
+        if sum([1 for e in self.edges[node1] if e is None or len(e) == 0]) >= len(self.nodes)-1:
             return False
         to_visit = [node2]
         visited = set(to_visit)
@@ -157,9 +157,9 @@ class LabGraph:
                     continue
                 if self.edges[i][j] is not None and self.edges[j][i] is not None:
                     self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[i][j], self.edges[i][j] + self.edges[i][j]
-                elif self.edges[i][j] is None:
+                elif self.edges[j][i] is not None:
                     self.edges[i][j] = self.edges[j][i].copy()
-                elif self.edges[j][i] is None:
+                elif self.edges[i][j] is not None:
                     self.edges[j][i] = self.edges[i][j].copy()
 
     def apply_fn_to_edges(self, fn_connections):
@@ -182,7 +182,7 @@ class LabGraph:
         self.edges = edges_list_to_table(self.edges_list, len(self.nodes))
 
 
-    def save_plot(self, folder, filename):
+    def save_plot(self, folder, filename, override_visual_style=None):
         g = Graph().as_directed()
         g.add_vertices(len(self.nodes))
         weights = []
@@ -204,6 +204,9 @@ class LabGraph:
         # g.es['name'] = [str(e) for e in weights]
         # g.es['label'] = [str(e) for e in weights]
         visial_style = best_visual_style(g, len(self.edges), 0 if self.edges_stash is None else len(self.edges_stash), len(self.nodes))
+        if override_visual_style is not None:
+            for k, v in override_visual_style.items():
+                visial_style[k] = v
         plot(g, folder+filename+'.png', **visial_style)
 
     def get_shortest_path_by_edges_amount(self, start, end):
