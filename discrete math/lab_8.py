@@ -11,10 +11,10 @@ def limit_nodes_by_degrees(graph, limit):
 
 
 def find_start_end(graph, must_differ=False):
-    outcoming_edges = [sum(len(e) for e in arr) for arr in graph.edges]
+    outcoming_edges = [sum(len(e) for e in arr if e is not None) for arr in graph.edges]
     incoming_edges = []
     for i in range(len(graph.nodes)):
-        incoming_edges.append(sum([len(graph.edges[j][i]) for j in range(len(graph.nodes))]))
+        incoming_edges.append(sum([len(graph.edges[j][i]) for j in range(len(graph.nodes)) if graph.edges[j][i] is not None]))
     start, end = outcoming_edges.index(max(outcoming_edges)), incoming_edges.index(max(incoming_edges))
     if must_differ and end == start:
         incoming_edges[end] = -100500

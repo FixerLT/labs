@@ -11,11 +11,11 @@ def bfs_solve(graph, node, log_folder=None):
     bfs_graph = LabGraph(graph.nodes, edges_list=[])
     search_index = 0
     distance = {node: 0}
-    while len(visited) < len(graph.nodes):
+    while len(visited) < len(graph.nodes) and search_index<len(to_visit):
         new_node = to_visit[search_index]
         neighbours = graph.get_neighbours(new_node)
         for neighbour in neighbours:
-            if neighbour is not visited:
+            if neighbour not in visited:
                 paths[neighbour] = paths[new_node] + [neighbour]
                 distance[neighbour] = distance[new_node] + 1
                 to_visit.append(neighbour)
@@ -31,7 +31,7 @@ def bfs_solve(graph, node, log_folder=None):
 
 def dijkstra_solve(graph, node, log_folder=None):
     graph.apply_fn_to_edges(lambda e: [min(e)] if e is not None else None)
-    distances = [-1 for i in range(len(graph.nodes))]
+    distances = [-1 for i in range(len(graph.nodes))]  # TODO change -1 to None for proper display of distances in log
     parents = [-1 for i in range(len(graph.nodes))]
     distances[node] = 0
     to_visit = []
@@ -107,8 +107,8 @@ def save_log(file_name, distances, paths, loops=None):
         for i, d in enumerate(distances):
             f.write('distance to node ' + str(i) + ' is ' + str(d) + '\n')
         f.write('\n')
-        for path in paths:
-            f.write('path to ' + str(path[-1]) + ' is ' + str(path) + '\n')
+        for i, path in enumerate(paths):
+            f.write('path to ' + str(i) + ' is ' + str(path) + '\n')
         f.write('\n')
         if loops is not None:
             for loop in loops:
