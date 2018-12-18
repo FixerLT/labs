@@ -62,38 +62,36 @@ def bellman_ford_solve(graph, node, log_folder=None):
     graph.edges_list = table_to_edges_list(graph.edges)
     distances = [None for i in range(len(graph.nodes))]
     parents = [None for i in range(len(graph.nodes))]
+    paths = [None for i in range(len(graph.nodes))]
     parents[node] = node
     distances[node] = 0
+    paths[node] = [node]
     bellman_ford_g = LabGraph(graph.nodes, edges_list=[])
     relaxation_counter = 0
     flags = [False, False]
-    looped = set()
+    loops = set()
     for x in range(len(graph.nodes) - 1):
         if flags[1]:
             break
-        flags[1] = flags[0] == True
+        flags[1] = flags[0]
         flag = True
         for edge in graph.edges_list:
             if distances[edge[0]] is not None:
-                if flags[0]:
-                    if distances[edge[1]] is not None or distances[edge[1]] > distances[edge[0]] + edge[2] \
-                            and parents[edge[1]] is not None and parents[edge[1]] == edge[0]:
-                        looped.add(edge[1])
-                if distances[edge[1]] is None or distances[edge[1]] > distances[edge[0]] + edge[2] \
-                        and (parents[edge[1]] is None or parents[edge[1]] != edge[0]):
-                    distances[edge[1]] = distances[edge[0]] + edge[2]
-                    if parents[edge[1]] is not None:
-                        bellman_ford_g.edges[parents[edge[1]]][edge[1]] = None
-                    bellman_ford_g.edges[edge[0]][edge[1]] = [edge[2]]
-                    bellman_ford_g.save_plot(log_folder, 'bellman_ford_relaxation_' + str(relaxation_counter))
-                    relaxation_counter += 1
-                    parents[edge[1]] = edge[0]
-                    flag = False
+                if distances[edge[1]] is None or (distances[edge[1]] > distances[edge[0]] + edge[2] \
+                        and (parents[edge[1]] is None or parents[edge[1]] != edge[0])):
+                    if edge[1] in paths[edge[0]]:
+                        loops.add(tuple(paths[edge[0]][paths[edge[0]].index(edge[1]):] + [edge[1]]))
+                    else:
+                        distances[edge[1]] = distances[edge[0]] + edge[2]
+                        if parents[edge[1]] is not None:
+                            bellman_ford_g.edges[parents[edge[1]]][edge[1]] = None
+                        bellman_ford_g.edges[edge[0]][edge[1]] = [edge[2]]
+                        bellman_ford_g.save_plot(log_folder, 'bellman_ford_relaxation_' + str(relaxation_counter))
+                        relaxation_counter += 1
+                        parents[edge[1]] = edge[0]
+                        paths[edge[1]] = paths[edge[0]] + [edge[1]]
+                        flag = False
         flags[0] = flag
-    loops = [[e] for e in looped]
-    for loop in loops:
-        while loop[-1] != node:
-            loop.append(parents[loop[-1]])
     paths = [[i] for i in range(len(parents))]
     for path in paths:
         while parents[path[-1]] is not None and parents[path[-1]] not in path:
