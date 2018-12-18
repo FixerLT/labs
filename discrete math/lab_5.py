@@ -1,3 +1,4 @@
+import random
 from generate_lab58_graph import get_graph_for_topic_not_1
 
 
@@ -11,9 +12,8 @@ def save_to_file(report, path, file_name):
 def apply_str_stub_to_array(str_stub, arr, step='\n'):
     return ''.join(str_stub.format(*e) + step for e in arr)
 
-
-graph = get_graph_for_topic_not_1()
-path = "D:/Education/DonNU/Discrete math"  # '/home/san/Documents/university/babakov/lab5/'
+path = "D:/Education/DonNU/Discrete math/"  # '/home/san/Documents/university/babakov/lab5/'
+graph = get_graph_for_topic_not_1((path, 'topic_1_src'))
 
 task1 = 'Вершины: {}\nМощность: {}\n\nРёбра: {}\nМощность: {}\n\nДуги: {}\nМощность: {}\n\n'  # TODO distinguish Рёбра and Дуги
 task1 = task1.format(str(graph.nodes), len(graph.nodes), graph.edges_list, len(graph.edges_list), graph.edges_list, len(graph.edges_list))
@@ -62,9 +62,6 @@ task6 = 'Количество петель: {}\n\n'
 task6 = task6.format(str(loop_count))
 save_to_file(task6, path, '6')
 
-#простым граф не может быть простым по условию (см. Лаб №0 п. 3)
-# давай делать скрипт lab_5 независимо от условия в 0 лабе второго семестра. Чтобы наш код определял тип для всех случаев
-
 if max_degree > 1:
     if loop_count > 0:
         s = "псевдографом"
@@ -77,5 +74,39 @@ task7 = task7.format(s)
 save_to_file(task7, path, '7')
 
 
+def rand_path():
+    curr_node = random.randrange(0, len(graph.nodes))
+    path = [curr_node]
+    path_len_max = random.randint(3, min(len(graph.edges_list), 15))
+    for i in range(path_len_max):
+        for j in range(len(graph.edges[curr_node])):
+            if j == curr_node:
+                continue
+            if graph.edges[curr_node][i] is not None and len(graph.edges[curr_node][i]) > 0:
+                curr_node = j
+                path.append(curr_node)
+                break
+    return path
+
+paths = []
+while len(paths) < 3:
+    p = rand_path()
+    if len(p) > 2: #путь, состоящий из 1 ребра, - не крутой
+        paths.append(p)
+
+task8 = ""
+counter = 0
+for i in paths:
+    counter += 1
+    task8 += "Путь №" + str(counter) + ": "
+    task8.format()
+    for j in i:
+        task8 += str(j) + " -> "
+    task8 = task8[:-3]
+    task8 += "\nДлина: " + str(len(i)) + "\n"
+
+#task8 = 'Граф является {}\n\n'
+#task8 = task8.format(s)
+save_to_file(task8, path, '8')
 
 

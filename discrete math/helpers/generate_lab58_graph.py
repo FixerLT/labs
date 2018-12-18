@@ -26,6 +26,7 @@ def make_distance_between_nodes(nodes):
             table[-1].append(None)  # если между вершинами отсутствуют рёбра, соответствующее значение - None, а не пустой массив
     add_edges_to_table(table, [(0, 0, 1), (1, 0, 2), (0, 1, 3), (5, 5, 4), (0, 2, 5), (0, 3, 6), (0, 4, 7)])
     add_edges_to_table(table, [(7, 8, 8), (7, 9, 9), (7, 10, 10), (7, 10, 11)])
+    add_edges_to_table(table, [(1, 7, 12), (10, 6, 13), (6, 14, 14), (14, 2, 15)])
     # рёбра графа имеют тип tuple, а не list. Разница в том, что tuple immutable, а list - mutable
     return table
 
