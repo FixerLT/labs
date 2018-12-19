@@ -73,40 +73,119 @@ task7 = 'Граф является {}\n\n'
 task7 = task7.format(s)
 save_to_file(task7, path, '7')
 
+def bfs(start_node, graph):
+    nodes = [-1]*len(graph.nodes)
+    nodes[start_node] = -2
+    queue = [start_node]
+    while len(queue) > 0:
+        start_node = queue[0]
+        queue = queue[1:]
+        for i in range(len(graph.nodes)):
+            if nodes[i] == -1 and graph.edges[start_node][i] is not None and start_node != i:
+                queue.append(i)
+                nodes[i] = start_node
+    path = []
+    while nodes[start_node] != -2:
+        path.append(start_node)
+        start_node = nodes[start_node]
+    path.append(start_node)
+    return path[::-1]
 
-def rand_path():
-    curr_node = random.randrange(0, len(graph.nodes))
-    path = [curr_node]
-    path_len_max = random.randint(3, min(len(graph.edges_list), 15))
-    for i in range(path_len_max):
-        for j in range(len(graph.edges[curr_node])):
-            if j == curr_node:
-                continue
-            if graph.edges[curr_node][i] is not None and len(graph.edges[curr_node][i]) > 0:
-                curr_node = j
-                path.append(curr_node)
-                break
-    return path
+def make_beautiful_path(path):
+    beautiful_path = ""
+    for i in path:
+        beautiful_path += str(i) + " -> "
+    return beautiful_path[:-3]
 
-paths = []
-while len(paths) < 3:
-    p = rand_path()
-    if len(p) > 2: #путь, состоящий из 1 ребра, - не крутой
-        paths.append(p)
+def tasks_8_10_12():
+    paths = []
+    nodes_list = [i for i in range(len(graph.nodes))]
+    random.shuffle(nodes_list)
+    i = 0
+    while len(paths) < 3:
+        path = bfs(nodes_list[i], graph)
+        i += 1
+        if len(path) > 1:
+            paths.append(path)
 
-task8 = ""
-counter = 0
-for i in paths:
-    counter += 1
-    task8 += "Путь №" + str(counter) + ": "
-    task8.format()
-    for j in i:
-        task8 += str(j) + " -> "
-    task8 = task8[:-3]
-    task8 += "\nДлина: " + str(len(i)) + "\n"
+    result = ""
+    counter = 0
+    for i in paths:
+        counter += 1
+        result += "Путь №" + str(counter) + ": "
+        result.format()
+        result += make_beautiful_path(i)
+        path_len = 0
+        for j in range(1, len(i)):
+            path_len += graph.edges[i[j-1]][i[j]][0]
+        result += "\nДлина: " + str(path_len) + "\n"
+    return result
 
-#task8 = 'Граф является {}\n\n'
-#task8 = task8.format(s)
+task8 = tasks_8_10_12()
 save_to_file(task8, path, '8')
 
+def dfs(start_node, graph, used_nodes = [], curr_node = -1, path = []):
+    if curr_node == -1:
+        curr_node = start_node
+        path = [curr_node]
+    used_nodes[curr_node] = True
+    #path.append(curr_node)
+    for i in range(len(graph.nodes)):
+        if graph.edges[curr_node][i] is not None:
+            if not used_nodes[i]:
+                path.append(i)
+                path2 = dfs(start_node, graph, used_nodes, i, path.copy())
+                if path2 is not None:
+                    return path2
+                else:
+                    path = path[:-1]
+            elif i == start_node and len(path) >= 3:
+                return path
+    return None
 
+ # В лекции пример контура написан через ребра. TODO Нужно уточнить что выводить вершины или ребра
+
+def tasks_9_11_13():
+    paths = []
+    nodes_list = [i for i in range(len(graph.nodes))]
+    random.shuffle(nodes_list)
+    i = 0
+    while len(paths) < 3 and i < 15:
+        path = dfs(nodes_list[i], graph, used_nodes=[False] * len(graph.nodes))
+        if path is not None:
+            path.append(nodes_list[i])
+        i += 1
+        if path is not None and len(path) > 2:
+            paths.append(path)
+
+    #TODO если нет 3х контуров. (они есть, можно даже петли вывести)
+    result = ""
+    counter = 0
+    for i in paths:
+        counter += 1
+        result += "Путь №" + str(counter) + ": "
+        result.format()
+        result += make_beautiful_path(i)
+        path_len = 0
+        for j in range(1, len(i)):
+            path_len += graph.edges[i[j-1]][i[j]][0]
+        result += "\nДлина: " + str(path_len) + "\n"
+    return result
+
+task9 = tasks_9_11_13() # если есть 3 пути, то всё ок, иначе нужно ещё какую-то функцию придумать,
+                        # так как контур, при заданых условиях должен быть практически всегда
+save_to_file(task9, path, '9')
+
+task10 = tasks_8_10_12()
+save_to_file(task10, path, '10')
+
+task11 = tasks_9_11_13()  #по идее данное решение должно всегда давать правильный ответ(контрпример придумать не могу)
+save_to_file(task11, path, '11')
+
+task12 = tasks_8_10_12()
+save_to_file(task12, path, '12')
+
+task13 = tasks_9_11_13()
+save_to_file(task13, path, '13')
+
+#14-17

@@ -27,6 +27,8 @@ def make_distance_between_nodes(nodes):
     add_edges_to_table(table, [(0, 0, 1), (1, 0, 2), (0, 1, 3), (5, 5, 4), (0, 2, 5), (0, 3, 6), (0, 4, 7)])
     add_edges_to_table(table, [(7, 8, 8), (7, 9, 9), (7, 10, 10), (7, 10, 11)])
     add_edges_to_table(table, [(1, 7, 12), (10, 6, 13), (6, 14, 14), (14, 2, 15)])
+    add_edges_to_table(table, [(2, 10, 16), (10, 2, 17), (10, 14, 18), (14, 10, 19)])
+    add_edges_to_table(table, [(2, 6, 20), (6, 2, 21), (1, 9, 22), (9, 1, 23)])
     # рёбра графа имеют тип tuple, а не list. Разница в том, что tuple immutable, а list - mutable
     return table
 
