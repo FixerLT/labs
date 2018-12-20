@@ -94,6 +94,12 @@ class LabGraph:
                     degrees[-1] += len(self.edges[i][i])
         return degrees
 
+    def cnt_incoming_edges(self, node):
+        return sum([len(self.edges[j][node]) for j in range(len(self.nodes)) if self.edges[j][node] is not None])
+
+    def cnt_outcoming_edges(self, node):
+        return sum([len(self.edges[node][j]) for j in range(len(self.nodes)) if self.edges[node][j] is not None])
+
     def count_nodes_outcoming_edges(self):
         return [sum([len(e) for e in self.edges[i] if e is not None]) for i in range(len(self.nodes))]
 
