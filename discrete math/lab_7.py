@@ -48,8 +48,52 @@ def kruskal_solve(graph, log_folder=None):
                 break
 
 
-def make_orientated_graph_eulerian_with_min_edges(graph):
-    pass
+# TODO optimize
+def merge_loops(loops):
+    i = 0
+    while i < len(loops):
+        united_loops = False
+        for j in range(i+1, len(loops)):
+            its = set(loops[i]).intersection(set(loops[j]))
+            if its is not None:
+                its = list(its)[0]
+                i_index = loops[i].find(its)
+                j_index = loops[j].find(its)
+                loops[i] = loops[i][:i_index] + loops[j][j_index:] + loops[j][:j_index] + loops[i][i_index:]
+                loops.pop(j)
+                united_loops = True
+                break
+        if not united_loops:
+            i += 1
+
+
+
+# TODO
+def extract_lines_loop(graph):
+    return None, []
+
+
+def make_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
+    loops = graph.extract_loops()
+    loops = merge_loops(loops)
+    lines_loop, new_edges = extract_lines_loop(graph)  # TODO merge all possible loops to lines_loop
+    if lines_loop is None:
+        euler_path = []
+        for i, e in enumerate(loops):
+            euler_path.extend(e)
+            euler_path.append(e[0])  # because loop doesn't ends with first node, but there is edge e[-1], e[0]
+            new_edges.append((euler_path[-2], euler_path[-1], 1))
+        return new_edges, euler_path
+    else:
+        euler_path = []
+        euler_path.extend(lines_loop)
+        for i, e in enumerate(loops):
+            new_edges.append((euler_path[-1], e[0], 1))
+            euler_path.extend(e)
+            euler_path.append(e[0])
+        euler_path.append(lines_loop[0])
+        new_edges.append((euler_path[-2], euler_path[-1], 1))
+        return new_edges, euler_path
 
 
 def best_node_to_connect_in_component(component, degrees):
