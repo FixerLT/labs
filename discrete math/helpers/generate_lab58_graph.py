@@ -1,5 +1,6 @@
 from my_graph import LabGraph
 from my_graph import add_edges_to_table
+import random
 
 
 def get_distance_between_pubs(name1, name2):
@@ -32,6 +33,8 @@ def make_graph_manually():
     return LabGraph(nodes, table)
 
 
+# TODO planar if possible
+# TODO 25 вершин, 100+ рёбер
 def get_graph_for_topic_1(test_save=None):
     nodes = ['Signal Bar', 'The Drinkery', 'Barrel Pub', 'BarDuck', 'Varvar Bar',
              'Beer.Live', 'Mugnum94', 'Pravda Beer Theatre', 'OLD BAR', 'Pilsner Bar',
@@ -40,7 +43,10 @@ def get_graph_for_topic_1(test_save=None):
     for i in range(len(nodes)):
         distances.append([])
         for j in range(len(nodes)):
-            distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
+            if random.random() < 0.20:
+                distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
+            else:
+                distances[-1].append(None)
     graph = LabGraph(nodes, distances)
     if test_save is not None:
         graph.save_plot(test_save[0], test_save[1])
@@ -59,7 +65,7 @@ def get_graph_for_topic_not_1(test_save=None):
 
 if __name__ == "__main__":
     get_graph_for_topic_1(('/home/san/Documents/university/babakov/lab5/test/', 'topic1_source'))
-    get_graph_for_topic_1(('D:/Education/DonNU/Discrete math/', 'topic1_source'))
+    # get_graph_for_topic_1(('D:/Education/DonNU/Discrete math/', 'topic1_source'))
 
 
 

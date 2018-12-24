@@ -57,6 +57,7 @@ def dijkstra_solve(graph, node, log_folder=None):
     return distances, paths
 
 
+# TODO понижение весов на каждом шагу
 def bellman_ford_solve(graph, node, log_folder=None):
     graph.apply_fn_to_edges(lambda e: [min(e)] if e is not None else None)
     graph.edges_list = table_to_edges_list(graph.edges)
