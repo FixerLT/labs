@@ -118,6 +118,9 @@ class LabGraph:
                 neighbours.add(i)
         return neighbours
 
+    def get_neighbours_can_go(self, node):
+        return {i for i in range(len(self.nodes)) if self.edges[node][i] is not None and len(self.edges[node][i]) > 0}
+
     def is_bridge(self, node1, node2, orientated=False):
         if sum([1 for e in self.edges[node1] if e is None or len(e) == 0]) >= len(self.nodes)-1:
             return False

@@ -48,35 +48,63 @@ def kruskal_solve(graph, log_folder=None):
                 break
 
 
-# TODO optimize
+def merge_loops_into_one(loop, loops, start):
+    loop_set = set(loop)
+    j = start
+    united_loops = False
+    while j < len(loops):
+        its = loop_set.intersection(set(loops[j]))
+        if its is not None:
+            its = list(its)[0]
+            i_index = loop.find(its)
+            j_index = loops[j].find(its)
+            loop = loop[:i_index] + loops[j][j_index:] + loops[j][:j_index] + loop[i_index:]
+            loops.pop(j)
+            united_loops = True
+        else:
+            j += 1
+    return loop, united_loops
+
+
+# TODO optimize if possible
 def merge_loops(loops):
     i = 0
     while i < len(loops):
-        united_loops = False
-        for j in range(i+1, len(loops)):
-            its = set(loops[i]).intersection(set(loops[j]))
-            if its is not None:
-                its = list(its)[0]
-                i_index = loops[i].find(its)
-                j_index = loops[j].find(its)
-                loops[i] = loops[i][:i_index] + loops[j][j_index:] + loops[j][:j_index] + loops[i][i_index:]
-                loops.pop(j)
-                united_loops = True
-                break
+        loops[i], united_loops = merge_loops_into_one(loops[i], loops, i+1)
         if not united_loops:
             i += 1
 
 
-
-# TODO
 def extract_lines_loop(graph):
-    return None, []
+    starts = []
+    for i in range(len(graph.nodes)):
+        is_start = max(graph.cnt_outcoming_edges(i) - graph.cnt_incoming_edges(i), 0)
+        while is_start > 0:
+            starts.append(i)
+            is_start -= 1
+    if len(starts) == 0:
+        return None, []
+    new_edges = []
+    path = []
+    while len(starts) > 0:
+        path.append(starts.pop())
+        if len(path) > 0:
+            new_edges.append((path[-2], path[-1], 1))
+        can_go = graph.get_neighbours_can_go(path[-1])
+        while len(can_go) > 0:
+            path.append(next(iter(can_go)))
+            can_go = graph.get_neighbours_can_go(path[-1])
+            graph.edges[path[-2]][path[-1]].pop()
+            if len(graph.edges[path[-2]][path[-1]]) == 0:
+                graph.edges[path[-2]][path[-1]] = None
+    return path, new_edges
 
 
 def make_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
     loops = graph.extract_loops()
-    loops = merge_loops(loops)
-    lines_loop, new_edges = extract_lines_loop(graph)  # TODO merge all possible loops to lines_loop
+    merge_loops(loops)
+    lines_loop, new_edges = extract_lines_loop(graph)
+    lines_loop = merge_loops_into_one(lines_loop, loops, 0)[0]
     if lines_loop is None:
         euler_path = []
         for i, e in enumerate(loops):
