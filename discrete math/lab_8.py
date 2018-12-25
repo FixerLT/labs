@@ -33,8 +33,9 @@ def log_for_iteration(graph, path, flow, folder, index):
     save_graph_for_path(path, folder, index, nodes_amount=len(graph.nodes), flow=flow)
 
 
-def solve(graph, log_folder=None, different_start_end=True):
-    start, end = find_start_end(graph, must_differ=different_start_end)
+def solve(graph, log_folder=None, start=None, end=None, different_start_end=None):
+    if start is None or end is None:
+        start, end = find_start_end(graph, must_differ=different_start_end)
     print(str(start) + ' -> ' + str(end))
     flow = 0
     path, f = graph.get_shortest_path_by_edges_amount(start, end)
