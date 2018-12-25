@@ -189,3 +189,106 @@ task13 = tasks_9_11_13()
 save_to_file(task13, path, '13')
 
 #14-17
+
+is_symmetric = True
+for i in range(len(graph.nodes)):
+    for j in range(i, len(graph.nodes)):
+        if graph.edges[i][j] is not None:
+            if not (graph.edges[j][i] is not None and len(graph.edges[i][j]) == len(graph.edges[j][i])):
+                is_symmetric = False
+                i = len(graph.edges) + 1 # что бы выйти из первого цикла тоже
+                break
+
+if is_symmetric:
+    s = "симметричным"
+else:
+    s = "антисимметричным"
+task18 = 'Граф является {}\n\n'
+task18 = task18.format(s)
+save_to_file(task18, path, '18')
+
+def component_finder(start_node, visited):
+    visited[start_node] = True
+    for i in range(len(graph.nodes)):
+        if not visited[i] and graph.edges[start_node][i] is not None:
+            component_finder(i, visited)
+
+components = 0
+visited = [False] * len(graph.nodes)
+for i in range(len(graph.nodes)):
+    if not visited[i]:
+        component_finder(i, visited)
+        components += 1
+
+if components == 1:
+    task19 = "Граф связный\n\n"
+else:
+    task19 = "Граф не связный, количество компонент связности: " + str(components) + "\n\n"
+save_to_file(task19, path, '19')
+
+#20
+
+edges_count = 0
+for i in (range(len(graph.nodes))):
+    for j in (range(len(graph.nodes))):
+        if graph.edges[i][j] is not None:
+            edges_count += 1
+
+if edges_count == 0:
+    task21 = "Граф пустой\n\n"
+elif edges_count == len(graph.nodes)**2:
+    task21 = "Граф полный\n\n"
+else:
+    task21 = "Граф ни пустой, ни полный\n\n"
+save_to_file(task21, path, '21')
+
+nodes_degree = graph.get_node_degrees()
+#for i in graph.nodes:
+ #   nodes_degree.append(graph.get_node_degrees(i))
+
+is_regular = True
+for i in (range(1, len(graph.nodes))):
+    if nodes_degree[i-1] != nodes_degree[i]:
+        is_regular = False
+        break
+if is_regular:
+    task22 = "Граф однородный\n\n"
+    task23 = "Граф регулярный, степень регулярности: " + str(nodes_degree[0]) + "\n\n"
+else:
+    task22 = "Граф не однородный\n\n"
+    task23 = "Граф не регулярный\n\n"
+
+save_to_file(task22, path, '22')
+save_to_file(task23, path, '23')
+
+#24
+
+task25 = "\t" # писать вес или просто 1? и что делать с кратными ребрами?
+for i in (range(len(graph.nodes))):
+    task25 += str(i) + "\t"
+for i in (range(len(graph.nodes))):
+    task25 += "\n" + str(i) + "\t"
+    for j in (range(len(graph.nodes))):
+        if graph.edges[i][j] is not None:
+            task25 += str(graph.edges[i][j][0]) + "\t"
+        else:
+            task25 += "0\t"
+task25 += "\n\n"
+save_to_file(task25, path, '25')
+
+task26 = "\t"
+for i in range(len(graph.edges_list)):
+    task26 += str(i) + "\t"
+for i in (range(len(graph.nodes))):
+    task26 += "\n" + str(i) + "\t"
+    for j in range(len(graph.edges_list)):
+        if graph.edges_list[j][0] == i and graph.edges_list[j][1] != i:
+            task26 += "1\t"
+        elif graph.edges_list[j][1] == i and graph.edges_list[j][0] != i:
+            task26 += "-1\t"
+        else:
+            task26 += "0\t"
+task26 += "\n\n"
+save_to_file(task26, path, '26')
+
+#27
