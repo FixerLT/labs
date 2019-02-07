@@ -43,7 +43,7 @@ def get_graph_for_topic_1(test_save=None):
     for i in range(len(nodes)):
         distances.append([])
         for j in range(len(nodes)):
-            if random.random() < 0.20:
+            if random.random() < 0.15:
                 distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
             else:
                 distances[-1].append(None)

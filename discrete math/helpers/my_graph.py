@@ -37,14 +37,12 @@ def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style["vertex_label"] = g.vs["name"]
     visual_style["vertex_label_size"] = 28
     visual_style["vertex_name"] = g.vs["name"]
-    visual_style["edge_width"] = 2 #[0.1 * abs(w) for w in g.es['weight']]
-    #visual_style["edge_label"] = g.es['weight']
+    visual_style["edge_width"] = [1 + 0.2 * abs(w) for w in g.es['weight']]
+    visual_style["layout"] = g.layout('circle')
     visual_style["edge_label_size"] = 20
     visual_style["edge_label_dist"] = 0
-    visual_style["layout"] = g.layout('fr')#circle
     visual_style["bbox"] = (1200, 1200)
-    # shortest_length =
-    visual_style['arrow_size'] = [0.5 for w in g.es['weight']]
+    visual_style['arrow_size'] = [0.5 for _ in range(edges_sz + stash_sz)]
     visual_style['edge_color'] = ['black' if i in range(edges_sz) else 'red' for i in range(edges_sz + stash_sz)]
     for i, e in enumerate(g.es['weight']):
         if e < 0:
@@ -165,10 +163,13 @@ class LabGraph:
     def unorientate(self):
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
-                if i==j:
+                if i == j:
                     continue
                 if self.edges[i][j] is not None and self.edges[j][i] is not None:
-                    self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[i][j], self.edges[i][j] + self.edges[i][j]
+                    sum_arr = self.edges[i][j] + self.edges[j][i]
+                    self.edges[i][j] = sum_arr.copy()
+                    self.edges[j][i] = sum_arr.copy()
+                    # self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[j][i], self.edges[i][j] + self.edges[j][i]
                 elif self.edges[j][i] is not None:
                     self.edges[i][j] = self.edges[j][i].copy()
                 elif self.edges[i][j] is not None:
@@ -204,6 +205,7 @@ class LabGraph:
                     for e in self.edges[i][j]:
                         g.add_edges([(i, j)])
                         weights.append(e)
+        edges_sz = len(weights)
         if self.edges_stash is not None:
             for i in range(len(self.edges_stash)):
                 for j in range(len(self.edges_stash[i])):
@@ -215,7 +217,7 @@ class LabGraph:
         g.vs['name'] = [str(e) for e in range(len(self.nodes))]
         # g.es['name'] = [str(e) for e in weights]
         # g.es['label'] = [str(e) for e in weights]
-        visial_style = best_visual_style(g, len(self.edges), 0 if self.edges_stash is None else len(self.edges_stash), len(self.nodes))
+        visial_style = best_visual_style(g, edges_sz, len(weights) - edges_sz, len(self.nodes))
         if override_visual_style is not None:
             for k, v in override_visual_style.items():
                 visial_style[k] = v

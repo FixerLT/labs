@@ -3,12 +3,30 @@ from my_graph import LabGraph
 from data_structures import DisjointSetUnion
 from lab_8 import limit_nodes_by_degrees, save_graph_for_path
 from lab_6 import bfs_solve
+from docx_helper import Reporter
 import os
+from logs_helpers import get_log_for_distance, get_log_for_path
+# TODO fucking lot of work with reports here
+# TODO: after reports done add semantic logs
 
-
-def prima_solve(graph, log_folder=None):
-    graph.unorientate()
-    graph.apply_fn_to_edges(fn_connections=lambda e: [min(e)] if e is not None else None)
+# TODO: remove unorientate if needed
+# TODO: work with connectivity component rather than all graph
+def prima_solve(graph, log_folder=None, should_unorientate=True):
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Алгоритм Прима. Исходный Граф', image_path=log_folder + 'source_graph.png')
+    if should_unorientate:
+        graph.unorientate()
+        if log_folder is not None:
+            graph.save_plot(log_folder, 'source_graph_unorientate')
+            reporter.add_page(header='Исходный Граф', image_path=log_folder + 'source_graph_unorientate.png',
+                              comment='Неориентированный')
+    graph.apply_fn_to_edges(fn_connections=lambda e: [1] if e is not None else None)
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph_min_edge')
+        reporter.add_page(header='Исходный Граф', image_path=log_folder + 'source_graph_min_edge.png',
+                          comment='Кратные рёбра удалены')
     prima_g = LabGraph(graph.nodes, edges_list=[])
     distances = {}  # key is target node, value is tuple(distance, src node)
     prima_g_connected = [0]
@@ -23,14 +41,30 @@ def prima_solve(graph, log_folder=None):
         new_node, (dist, parent) = min(distances.items(), key=lambda e: e[1][0])
         distances.pop(new_node)
         prima_g.add_to_stash(e_stash_list=[(parent, new_node, dist)])
+        if log_folder is not None:
+            prima_g.save_plot(log_folder, '{}_tree_step'.format(len(prima_g_connected) - 1))
+            reporter.add_page(header='Алгоритм Прима\nШаг {}'.format(len(prima_g_connected)-1),
+                              image_path=log_folder + '{}_tree_step.png'.format(len(prima_g_connected) - 1),
+                              comment='Добавили вершину {}, её предок {}'.format(new_node, parent))
         prima_g.apply_stash()
         prima_g_connected.append(new_node)
+    if log_folder is not None:
+        prima_g.save_plot(log_folder, 'result')
+        reporter.add_page(header='Результат Алгоритма Прима', image_path=log_folder + 'result.png')
+        reporter.save_report(path=log_folder, report_name='prima_report')
+
+
+def kruskal_solve(graph, log_folder=None, should_unorientate=True):
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Алгоритм Крускала. Исходный Граф', image_path=log_folder + 'source_graph.png')
+    if should_unorientate:
+        graph.unorientate()
         if log_folder is not None:
-            prima_g.save_plot(log_folder, str(len(prima_g_connected) - 2) + '_tree_step')
-
-
-def kruskal_solve(graph, log_folder=None):
-    graph.unorientate()
+            graph.save_plot(log_folder, 'source_graph_unorientate')
+            reporter.add_page(header='Исходный Граф', image_path=log_folder + 'source_graph_unorientate.png',
+                              comment='Неориентированный')
     graph.apply_fn_to_edges(fn_connections=lambda e: [min(e)] if e is not None else None)
     kruskal_g = LabGraph(graph.nodes, edges_list=[])
     edges = sorted(graph.edges_list, key=lambda e: e[2])
@@ -40,12 +74,19 @@ def kruskal_solve(graph, log_folder=None):
     for edge in edges:
         if dsu.find_set(edge[0]) != dsu.find_set(edge[1]):
             kruskal_g.add_to_stash(e_stash_list=[edge])
-            kruskal_g.apply_stash()
             if log_folder is not None:
                 kruskal_g.save_plot(log_folder, str(len(graph.nodes) - dsu.num_sets) + '_tree_step')
+                reporter.add_page(header='Алгоритм Крускала\nШаг {}'.format(len(graph.nodes) - dsu.num_sets),
+                                  image_path=log_folder + '{}_tree_step.png'.format(len(graph.nodes) - dsu.num_sets),
+                                  comment='Объеденили вершины {} и {}'.format(edge[0], edge[1]))
+            kruskal_g.apply_stash()
             dsu.union_sets(edge[0], edge[1])
             if dsu.num_sets == 1:
                 break
+    if log_folder is not None:
+        kruskal_g.save_plot(log_folder, 'result')
+        reporter.add_page(header='Результат Алгоритма Крускала', image_path=log_folder + 'result.png')
+        reporter.save_report(path=log_folder, report_name='kruskal_report')
 
 
 def merge_loops_into_one(loop, loops, start):
@@ -317,6 +358,7 @@ def solve(log_folder):
             f.write('hamilton path is: ' + str(path) + '\n')
 
 
+# TODO single graph copy, don't create new graphs
 if __name__ == "__main__":
     solve('/home/san/Documents/university/babakov/lab7/')
 

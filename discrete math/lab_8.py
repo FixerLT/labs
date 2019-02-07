@@ -1,5 +1,6 @@
 from my_graph import LabGraph
 from generate_lab58_graph import get_graph_for_topic_1
+# TODO fucking lot of work with reports here
 
 
 def limit_nodes_by_degrees(graph, limit):
@@ -50,6 +51,8 @@ def solve(graph, log_folder=None, start=None, end=None, different_start_end=None
     return flow
 
 
-graph = get_graph_for_topic_1()
-limit_nodes_by_degrees(graph, 10)
-print(solve(graph, log_folder='/home/san/Documents/university/babakov/lab8/'))
+# TODO single graph copy, don't create new graphs
+if __name__ == "__main__":
+    graph = get_graph_for_topic_1()
+    limit_nodes_by_degrees(graph, 10)
+    print(solve(graph, log_folder='/home/san/Documents/university/babakov/lab8/'))
