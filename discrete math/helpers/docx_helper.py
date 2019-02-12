@@ -14,8 +14,9 @@ def watermark_img(input_file, output_file):
         background.save(filename=output_file)
 
 
-def add_step(document, header=None, image_path=None, watermark=False, comment=None):
-    document.add_page_break()
+def add_step(document, header=None, image_path=None, watermark=False, comment=None, create_new_page=True):
+    if create_new_page:
+        document.add_page_break()
     if header is not None:
         document.add_paragraph(header, style='Intense Quote')
     if image_path is not None:
@@ -59,11 +60,12 @@ class PageReport:
 class Reporter:
     pages = []
 
-    def save_report(self, path='/home/san/Documents/university/babakov/test/', report_name='report', watermark=True):
+    def save_report(self, path='/home/san/Documents/university/babakov/test/', report_name='report',
+                    watermark=True, create_new_page=True):
         document = Document()
         for page in self.pages:
             add_step(document, header=page.header, image_path=page.image_path,
-                     watermark=watermark, comment=page.comment)
+                     watermark=watermark, comment=page.comment, create_new_page=create_new_page)
         document.save(path + report_name + '.docx')
 
     def add_page(self, page=None, header=None, image_path=None, comment=None):
