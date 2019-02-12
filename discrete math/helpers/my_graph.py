@@ -108,11 +108,11 @@ class LabGraph:
                 distances[i] = min(self.edges[node][i])
         return distances
 
-    def get_neighbours(self, node):
+    def get_neighbours(self, node, use_stash=True):
         neighbours = set()
         for i in range(len(self.nodes)):
             if (self.edges[node][i] is not None and len(self.edges[node][i]) > 0) or \
-                    (self.edges_stash is not None and self.edges_stash[node][i] is not None and len(self.edges_stash[node][i]) > 0):
+                    (use_stash and self.edges_stash is not None and self.edges_stash[node][i] is not None and len(self.edges_stash[node][i]) > 0):
                 neighbours.add(i)
         return neighbours
 
@@ -160,16 +160,17 @@ class LabGraph:
         self.edges_stash = None
         self.edges_stash_list = None
 
-    def unorientate(self):
+    def unorientate(self, duplicate=True):
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
                 if i == j:
                     continue
                 if self.edges[i][j] is not None and self.edges[j][i] is not None:
-                    sum_arr = self.edges[i][j] + self.edges[j][i]
-                    self.edges[i][j] = sum_arr.copy()
-                    self.edges[j][i] = sum_arr.copy()
-                    # self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[j][i], self.edges[i][j] + self.edges[j][i]
+                    if duplicate:
+                        sum_arr = self.edges[i][j] + self.edges[j][i]
+                        self.edges[i][j] = sum_arr.copy()
+                        self.edges[j][i] = sum_arr.copy()
+                        # self.edges[i][j], self.edges[j][i] = self.edges[i][j] + self.edges[j][i], self.edges[i][j] + self.edges[j][i]
                 elif self.edges[j][i] is not None:
                     self.edges[i][j] = self.edges[j][i].copy()
                 elif self.edges[i][j] is not None:
@@ -223,6 +224,14 @@ class LabGraph:
                 visial_style[k] = v
         plot(g, folder+filename+'.png', **visial_style)
 
+    def remove_loop(self, loop):
+        for i in range(len(loop)):
+            start = loop[i]
+            end = loop[(i+1) % len(loop)]
+            self.edges[start][end] = self.edges[start][end][:-1]
+            if len(self.edges[start][end]) == 0:
+                self.edges[start][end] = None
+
     def get_shortest_path_by_edges_amount(self, start, end):
         to_visit = [start]
         visited = set()
@@ -231,7 +240,7 @@ class LabGraph:
             node = to_visit[0]
             to_visit.pop(0)
             visited.add(node)
-            for neighbour in self.get_neighbours(node):
+            for neighbour in self.get_neighbours(node, use_stash=False):
                 if neighbour == end:
                     path = [end, node]
                     while parents[node] is not None:
@@ -247,7 +256,8 @@ class LabGraph:
                     parents[neighbour] = node
         return None, None
 
-    def reduce_edges(self, path, val):
+    def reduce_edges(self, path, val, should_add_to_stash=False):
+        deleted = []
         for i in range(len(path) - 1):
             edge_from = path[i]
             edge_to = path[i+1]
@@ -258,9 +268,13 @@ class LabGraph:
                     val_cp = 0
                 else:
                     val_cp -= self.edges[edge_from][edge_to][-1]
+                    if should_add_to_stash:
+                        self.add_to_stash(e_stash_list=[(edge_from, edge_to, self.edges[edge_from][edge_to][-1])])
                     self.edges[edge_from][edge_to].pop(-1)
+                    deleted.append((edge_from, edge_to))
             if len(self.edges[edge_from][edge_to]) == 0:
                 self.edges[edge_from][edge_to] = None
+        return deleted
 
     def __init__(self, nodes, edges=None, edges_list=None):
         self.nodes = nodes
@@ -273,3 +287,9 @@ class LabGraph:
             self.edges = edges_list_to_table(edges_list, len(nodes))
             self.edges_list = edges_list.copy()
 
+    def copy(self):
+        result_graph = LabGraph(self.nodes, edges_list=self.edges_list.copy())
+        if self.edges_stash_list is not None:
+            result_graph.edges_stash, result_graph.edges_stash_list = \
+                edges_list_to_table(self.edges_stash_list), self.edges_stash_list.copy()
+        return result_graph

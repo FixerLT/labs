@@ -57,7 +57,7 @@ class PageReport:
 
 
 class Reporter:
-    pages = []
+    pages = None
 
     def save_report(self, path='/home/san/Documents/university/babakov/test/', report_name='report', watermark=True):
         document = Document()
@@ -78,4 +78,13 @@ class Reporter:
 
         self.pages.append(page)
 
+    def extend_last_comment(self, extra_text):
+        if len(self.pages) == 0:
+            self.add_page(comment='')
+        if self.pages[-1].comment is None:
+            self.pages[-1].comment = extra_text
+        else:
+            self.pages[-1].comment += extra_text
 
+    def __init__(self):
+        self.pages = []

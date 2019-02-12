@@ -1,4 +1,3 @@
-from generate_lab58_graph import get_graph_for_topic_1
 from my_graph import LabGraph, table_to_edges_list
 import os
 import json
@@ -11,6 +10,7 @@ def bfs_solve(graph, node, log_folder=None):
     reporter = Reporter()
     log_step = 'С вершины {} есть ребро в непосещённую вершину {}\nРасстояние до новой вершины: {}\n'
     log_update = 'Начинаем поиск с вершины {}\n'
+    log_finished = 'Больше нет непосещённых вершин среди соседей {}\n'
     file_template = 'bfs_step_{}'
     header_template = 'Поиск в Ширину. Шаг {}'
     logs = []
@@ -47,6 +47,7 @@ def bfs_solve(graph, node, log_folder=None):
                     log = ''
         search_index += 1
         to_visit.pop(0)
+        log += log_finished.format(new_node)
     if log_folder is not None:
         with open(log_folder + 'logs.txt', 'w+') as f:
             json.dump(logs, f)
@@ -66,6 +67,7 @@ def dijkstra_solve(graph, node, log_folder=None):
     reporter = Reporter()
     log_step = 'С вершины {} есть ребро в вершину {}\nДлина ребра: {}; расстояние до вершины уменьшено с {} до {}\n'
     log_update = 'Минимальное расстояние до вершины №{} равно {}. Фиксируем её и обновляем кратчайшие расстояния до остальных вершин\n'
+    log_finished = 'Больше нет непосещённых вершин среди соседей {}\n'
     log = ''
     file_template = 'dijkstra_step_{}'
     header_template = 'Алгоритм Дейкстры. Шаг {}'
@@ -100,6 +102,7 @@ def dijkstra_solve(graph, node, log_folder=None):
                 log += log_step.format(current, i, d, 'infinity' if distances[i] is None else distances[i], distances[current] + d)
                 distances[i] = distances[current] + d
                 parents[i] = current
+        log += log_finished.format(current)
     if log_folder is not None and len(log) > 0:
         reporter.add_page(PageReport(comment=log))
     paths = [[i] for i in range(len(parents))]
@@ -149,7 +152,9 @@ def bellman_ford_solve(graph, node, log_folder=None):
     flags = [False, False]
     loops = set()
     for x in range(len(graph.nodes) - 1):
+        reporter.extend_last_comment('Итерируем все вершины')
         if flags[1]:
+            reporter.add_page(comment='При последнем обходе вершин релаксации не получилось. Завершаем итерации')
             break
         flags[1] = flags[0]
         flag = True
@@ -208,25 +213,25 @@ def save_log(file_name, distances, paths, loops=None):
 
 
 # TODO single graph copy, don't create new graphs
-def solve(log_folder):
+def solve(source_graph, log_folder):
     sub_folders = ['bfs/', 'dijkstra/', 'bellman-ford/']
     for e in sub_folders:
         if not os.path.exists(log_folder + e):
             os.mkdir(log_folder + e)
 
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     graph.save_plot(log_folder, 'source_graph')
     graph.unorientate()
     graph.apply_fn_to_edges(lambda e: [1] if e is not None else None)
     distances, paths = bfs_solve(graph, 0, log_folder + sub_folders[0])  # TODO взять вершину с максимальной кратностью
     save_log(log_folder + sub_folders[0] + 'bfs_report.txt', distances, paths)
 
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     graph.apply_fn_to_edges(lambda e: [abs(k) for k in e] if e is not None else None)
     distances, paths = dijkstra_solve(graph, max(enumerate(graph.count_nodes_outcoming_edges()), key=lambda kv: kv[1])[0], log_folder + sub_folders[1])
     save_log(log_folder + sub_folders[1] + 'dijkstra_report.txt', distances, paths)
 
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     graph.add_to_stash(e_stash_list=[(0, 1, -5), (5, 2, -1)])  # TODO взять вершины с отрицательным весом со смыслом
     graph.apply_stash()
     distances, paths, loops = bellman_ford_solve(graph, max(enumerate(graph.count_nodes_outcoming_edges()), key=lambda kv: kv[1])[0], log_folder=log_folder+sub_folders[2])

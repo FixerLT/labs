@@ -1,5 +1,5 @@
 from generate_lab58_graph import get_graph_for_topic_1
-from my_graph import LabGraph
+from my_graph import LabGraph, table_to_edges_list
 from data_structures import DisjointSetUnion
 from lab_8 import limit_nodes_by_degrees, save_graph_for_path
 from lab_6 import bfs_solve
@@ -95,10 +95,10 @@ def merge_loops_into_one(loop, loops, start):
     united_loops = False
     while j < len(loops):
         its = loop_set.intersection(set(loops[j]))
-        if its is not None:
+        if its is not None and len(its) > 0:  # TODO : check if second condition should be here
             its = list(its)[0]
-            i_index = loop.find(its)
-            j_index = loops[j].find(its)
+            i_index = loop.index(its)
+            j_index = loops[j].index(its)
             loop = loop[:i_index] + loops[j][j_index:] + loops[j][:j_index] + loop[i_index:]
             loops.pop(j)
             united_loops = True
@@ -129,7 +129,7 @@ def extract_lines_loop(graph):
     path = []
     while len(starts) > 0:
         path.append(starts.pop())
-        if len(path) > 0:
+        if len(path) > 0 and len(path) > 1:  # TODO: check second condition
             new_edges.append((path[-2], path[-1], 1))
         can_go = graph.get_neighbours_can_go(path[-1])
         while len(can_go) > 0:
@@ -141,8 +141,26 @@ def extract_lines_loop(graph):
     return path, new_edges
 
 
+def extract_loops(graph, log_folder=None):
+    loops = []
+    for node in range(len(graph.nodes)):
+        while True:
+            distances, paths = bfs_solve(graph, node)
+            found = False
+            for loop_end in range(len(graph.nodes)):
+                if paths[loop_end] is not None and graph.edges[loop_end][node] is not None and len(graph.edges[loop_end][node]) > 0:
+                    loops.append(paths[loop_end])
+                    graph.remove_loop(paths[loop_end])
+                    found = True
+                    break
+            if not found:
+                break
+    graph.edges_list = table_to_edges_list(graph.edges)
+    return loops
+
+
 def make_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
-    loops = graph.extract_loops()
+    loops = extract_loops(graph)
     merge_loops(loops)
     lines_loop, new_edges = extract_lines_loop(graph)
     lines_loop = merge_loops_into_one(lines_loop, loops, 0)[0]
@@ -291,8 +309,22 @@ def get_next_hamilton_node(graph, visited, start):
 
 
 def hamilton_solve(graph, log_folder=None):
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Поиск Гамильтонова Пути\nИсходный Граф', image_path=log_folder + 'source_graph.png')
+    graph.apply_fn_to_edges(lambda e: [max(e)] if e is not None else None)
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph_max')
+        reporter.add_page(header='Поиск Гамильтонова Пути\n', image_path=log_folder + 'source_graph_max.png',
+                          comment='Кратные Рёбра заменены на одно')
     ham_path = None
     ham_loop = None
+    prev_path = []
+    log = ''
+    log_return = 'Больше нет непосещённых соседей у вершины {}. Удаляем её с конца пути.\n'
+    log_append = 'У последней в пути вершины {} есть непосещённый сосед {}. Добавляем его в конец пути.\n'
+    appended = False
     for e in range(len(graph.nodes)):
         visited = [e]
         starts = [0]
@@ -306,59 +338,71 @@ def hamilton_solve(graph, log_folder=None):
             else:
                 next_node, next_start = get_next_hamilton_node(graph, visited, starts[-1])
             if next_node is None:
+                if appended:
+                    save_graph_for_path(visited, log_folder, iteration_counter, len(graph.nodes), pref='node_' + str(e) + '_', prev_path=prev_path)
+                    reporter.add_page(image_path=log_folder + 'node_' + str(e) + '_step_' + str(iteration_counter) + '_path.png',
+                                      comment=log)
+                    log = ''
+                    iteration_counter += 1
+                prev_path = visited.copy()
+                log += log_return.format(visited[-1])
                 visited.pop()
                 starts.pop()
+                appended = False
+
             else:
+                appended = True
+                log += log_append.format(visited[-1], next_node)
                 visited.append(next_node)
                 starts[-1] = next_start
                 starts.append(0)
-                save_graph_for_path(visited, log_folder, iteration_counter, len(graph.nodes), pref='node_' + str(e) + '_')
                 if len(visited) == len(graph.nodes):
                     ham_path = visited.copy()
                 if len(visited) > len(graph.nodes):
                     ham_loop = visited.copy()
                     break
-            iteration_counter += 1
         if ham_loop is not None:
             break
     if ham_loop is not None:
+        save_graph_for_path(ham_loop, log_folder, '0', len(graph.nodes))
+        reporter.add_page(header='Гамильтонов Цикл Найден!', image_path=log_folder + 'step_0_path.png', comment=log)
+        reporter.save_report(path=log_folder, report_name='hamilton_report')
         return 'hamilton', ham_loop
     if ham_path is not None:
+        save_graph_for_path(ham_path, log_folder, '0', len(graph.nodes))
+        reporter.add_page(header='Гамильтонов Путь Найден!', image_path=log_folder + 'step_0_path.png', comment=log)
+        reporter.save_report(path=log_folder, report_name='hamilton_report')
         return 'semi-hamilton', ham_path
+    reporter.add_page(header='Гамильтонов Пути не Существует!', comment=log)
+    reporter.save_report(path=log_folder, report_name='hamilton_report')
     return 'non-hamilton', None
 
 
-def solve(log_folder):
-    graph = get_graph_for_topic_1()
+def solve(source_graph, log_folder):
+    graph = source_graph.copy()
     sub_folders = ['prima/', 'kruskal/', 'euler_not_orientated/', 'euler_orientated/', 'hamilton/']
     for e in sub_folders:
         if not os.path.exists(log_folder + e):
             os.mkdir(log_folder + e)
     prima_solve(graph, log_folder=log_folder + sub_folders[0])
     kruskal_solve(graph, log_folder=log_folder + sub_folders[1])
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     g_type, path = euler_path(graph, log_folder=log_folder + sub_folders[2], orientated=False)
     with open(log_folder + sub_folders[2] + 'euler_non_orientated_report.txt', 'w+') as f:
         f.write('the type of non orientated graph is ' + g_type + '\n')
         if path is not None:
             f.write('euler path is: ' + str(path) + '\n')
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     g_type, path = euler_path(graph, log_folder=log_folder + sub_folders[3], orientated=True)
     with open(log_folder + sub_folders[3] + 'euler_orientated_report.txt', 'w+') as f:
         f.write('the type of orientated graph is ' + g_type + '\n')
         if path is not None:
             f.write('euler path is: ' + str(path) + '\n')
-    graph = get_graph_for_topic_1()
+    graph = source_graph.copy()
     limit_nodes_by_degrees(graph, 7)
-    graph.unorientate()
+    graph.unorientate(duplicate=False)
     g_type, path = hamilton_solve(graph, log_folder=log_folder + sub_folders[4])
     with open(log_folder + sub_folders[4] + 'hamilton_report.txt', 'w+') as f:
         f.write('the type of graph is ' + g_type + '\n')
         if path is not None:
             f.write('hamilton path is: ' + str(path) + '\n')
-
-
-# TODO single graph copy, don't create new graphs
-if __name__ == "__main__":
-    solve('/home/san/Documents/university/babakov/lab7/')
-

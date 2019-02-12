@@ -43,7 +43,7 @@ def get_graph_for_topic_1(test_save=None):
     for i in range(len(nodes)):
         distances.append([])
         for j in range(len(nodes)):
-            if random.random() < 0.15:
+            if random.random() < 0.4:
                 distances[-1].append(get_distance_between_pubs(nodes[i], nodes[j]))
             else:
                 distances[-1].append(None)
@@ -51,6 +51,21 @@ def get_graph_for_topic_1(test_save=None):
     if test_save is not None:
         graph.save_plot(test_save[0], test_save[1])
     return graph
+
+
+def get_graph_from_txt(file_path = '/home/san/Coding/Py/projects/DNO_labs_rep/labs/discrete math/helpers/alex_graph.txt'):
+    lines = open(file_path, 'r').readlines()
+    nodes_amount = int(lines[0])
+    edges_amount = int(lines[1])
+    distance_fn = lambda a, b: abs(a - b) + (a+b)%7
+    lines[2:2+edges_amount] = [line.replace('\n', '') for line in lines[2:2+edges_amount]]
+    edges_list = [line.split(' ') for line in lines[2:2+edges_amount]]
+    edges_list = [(int(a), (int(b)), distance_fn(int(a), int(b))) for a, b in edges_list]
+    distances_set = set([c for _, _, c in edges_list])
+    # print('edges generated {}/{}'.format(len(distances_set), edges_amount))
+    nodes = [str(i) for i in range(nodes_amount)]
+    return LabGraph(nodes, edges_list=edges_list)
+
 
 
 # одна функция возвращает 1 граф. можно сделать, чтобы функция возвращала граф относительно входящих аргументов
