@@ -24,7 +24,7 @@ def add_step(document, header=None, image_path=None, watermark=False, comment=No
             watermark_img(image_path, '/home/san/Documents/university/babakov/test/watermark_tmp.png')
             document.add_picture('/home/san/Documents/university/babakov/test/watermark_tmp.png', width=Mm(140.5))
         else:
-            document.add_picture(image_path)
+            document.add_picture(image_path, width=Mm(140.5))#document.add_picture(image_path)
     if comment is not None:
         document.add_paragraph(comment)
 
@@ -60,8 +60,9 @@ class PageReport:
 class Reporter:
     pages = []
 
-    def save_report(self, path='/home/san/Documents/university/babakov/test/', report_name='report',
-                    watermark=True, create_new_page=True):
+    #'/home/san/Documents/university/babakov/test/'
+    def save_report(self, path="D:/Education/DonNU/Discrete math/", report_name='report',
+                    watermark=False, create_new_page=True):#watermark=True
         document = Document()
         for page in self.pages:
             add_step(document, header=page.header, image_path=page.image_path,

@@ -37,7 +37,7 @@ def log_for_iteration(graph, path, flow, folder, index):
 def solve(graph, log_folder=None, start=None, end=None, different_start_end=None):
     if start is None or end is None:
         start, end = find_start_end(graph, must_differ=different_start_end)
-    print(str(start) + ' -> ' + str(end))
+    #print(str(start) + ' -> ' + str(end))
     flow = 0
     path, f = graph.get_shortest_path_by_edges_amount(start, end)
     it = 0

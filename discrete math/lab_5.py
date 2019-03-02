@@ -1,8 +1,10 @@
 import random
 from generate_lab58_graph import get_graph_for_topic_not_1
+from my_graph import LabGraph
 from docx_helper import Reporter
 from lab_7 import hamilton_solve
 from lab_6 import bfs_solve
+from lab_8 import solve
 
 reporter = Reporter()
 
@@ -21,11 +23,18 @@ def apply_str_stub_to_array(str_stub, arr, step='\n'):
     #graph.save_plot(log_folder, 'source_graph')
 #reporter.add_page(header='Задание №1', image_path=log_folder + 'source_graph.png', comment=)
 
+def change_symbols(s):
+    s = s.replace("(", "<")
+    s = s.replace(")", ">")
+    s = s.replace("[", "{")
+    s = s.replace("]", "}")
+    return s
 
 def task1_solve(graph, log_folder=None):
     task1 = 'Вершины: {}\nМощность: {}\n\nРёбра: {}\nМощность: {}\n\nДуги: {}\nМощность: {}\n\n'  # TODO distinguish Рёбра and Дуги
     task1 = task1.format(str(graph.nodes), len(graph.nodes), graph.edges_list, len(graph.edges_list), graph.edges_list,
                          len(graph.edges_list))
+    task1 = change_symbols(task1)
     if log_folder is not None:
         save_to_file(task1, log_folder, '1')
         reporter.add_page(header='Задание №1', image_path=None, comment=task1)
@@ -35,7 +44,7 @@ def task2_solve(graph, log_folder=None):
     max_neighbours = max(adjacent_nodes)
     nodes_with_max_neighbours = list(filter((lambda e: e[1] == max_neighbours), enumerate(adjacent_nodes)))
 
-    task2 = 'Вершина №{} {} смежных вершин'
+    task2 = 'Вершина №{} имеет {} смежных вершин'
     task2 = apply_str_stub_to_array(task2, nodes_with_max_neighbours)
     task2 += '\n'
     if log_folder is not None:
@@ -66,8 +75,17 @@ def task4_solve(graph, log_folder=None):
         save_to_file(task4, log_folder, '4')
         reporter.add_page(header='Задание №4', image_path=None, comment=task4)
 
+def max_degree_calc(graph):
+    max_degree = 0
+    for row in graph.edges:
+        for e in row:
+            if e is not None:
+                max_degree = max(max_degree, len(e))
+    return max_degree
+
 def task5_solve(graph, log_folder=None):
-    max_degree = max([max([len(e) for e in row if e is not None]) for row in graph.edges])
+
+    max_degree = max_degree_calc(graph)
     max_degree_edges_arrays = ([[(i, j, max_degree)
                                  for i in range(len(graph.nodes)) if
                                  graph.edges[i][j] is not None and len(graph.edges[i][j]) == max_degree]
@@ -91,9 +109,11 @@ def task6_solve(graph, log_folder=None):
         reporter.add_page(header='Задание №6', image_path=None, comment=task6)
 
 def task7_solve(graph, log_folder=None):
-    loop_count = len(
-        [i for i in range(len(graph.nodes)) if graph.edges[i][i] is not None and len(graph.edges[i][i]) > 0])
-    max_degree = max([max([len(e) for e in row if e is not None]) for row in graph.edges])
+    loop_count = 0
+    for i in range(len(graph.nodes)):
+        if graph.edges[i][i] is not None and len(graph.edges[i][i]) > 0:
+            loop_count += 1
+    max_degree = max_degree_calc(graph)
     if max_degree > 1:
         if loop_count > 0:
             s = "псевдографом"
@@ -109,10 +129,10 @@ def task7_solve(graph, log_folder=None):
 
 
 def make_beautiful_path(path):
-    beautiful_path = ""
+    beautiful_path = "<"
     for i in path:
-        beautiful_path += str(i) + " -> "
-    return beautiful_path[:-3]
+        beautiful_path += str(i) + ", "
+    return beautiful_path[:-2] + ">"
 
 
 def tasks_8_10_12(graph):
@@ -141,7 +161,7 @@ def tasks_8_10_12(graph):
         path_len = 0
         for j in range(1, len(i)):
             path_len += graph.edges[i[j - 1]][i[j]][0]
-        result += "\nДлина: " + str(path_len) + "\n"
+        result += "\nДлина: " + str(len(i)) + "\n"#str(path_len)
     return result
 
 
@@ -197,7 +217,7 @@ def tasks_9_11_13(graph):
         path_len = 0
         for j in range(1, len(i)):
             path_len += graph.edges[i[j-1]][i[j]][0]
-        result += "\nДлина: " + str(path_len) + "\n"
+        result += "\nДлина: " + str(len(i)) + "\n"#str(path_len)
     return result
 
 
@@ -227,35 +247,30 @@ def task12_solve(graph, log_folder=None):
         reporter.add_page(header='Задание №12', image_path=None, comment=task12)
 
 def task13_solve(graph, log_folder=None):
-    task13 = tasks_9_11_13()
+    task13 = tasks_9_11_13(graph)
     if log_folder is not None:
         save_to_file(task13, log_folder, '13')
         reporter.add_page(header='Задание №13', image_path=None, comment=task13)
 
 
-#14-17
-
-
-def task14_solve(graph, log_folder=None): #TODO
-    type, task_path = hamilton_solve(graph.copy(), log_folder)
+def task14_solve(graph, log_folder=None):
+    type, task_path = hamilton_solve(graph, log_folder)
     if task_path is None:
         task14 = "Гамильтонова пути нет\n\n"
     else:
-        task14 = "Гамильтонов путь: " + task_path + "\n\n"
+        task14 = "Гамильтонов путь: " + make_beautiful_path(task_path) + "\n\n"
     if log_folder is not None:
         save_to_file(task14, log_folder, '14')
         reporter.add_page(header='Задание №14', image_path=None, comment=task14)
 
 
 def task15_solve(graph, log_folder=None):
-    type, task_path = hamilton_solve(graph.copy(), log_folder)
+    type, task_path = hamilton_solve(graph, log_folder)
     if task_path is None:
-        task14 = "Гамильтонова пути нет\n\n"
         task15 = "Гамильтонова контура нет\n\n"
     else:
-        task14 = "Гамильтонов путь: \n\n"
         if type == "hamilton":
-            task15 = "Гамильтонов контур: \n\n"
+            task15 = "Гамильтонов контур: " + make_beautiful_path(task_path) + "\n\n"
         else:
             task15 = "Гамильтонова контура нет\n\n"
     if log_folder is not None:
@@ -263,7 +278,7 @@ def task15_solve(graph, log_folder=None):
         reporter.add_page(header='Задание №15', image_path=None, comment=task15)
 
 
-
+#16-17
 
 
 def task18_solve(graph, log_folder=None):
@@ -286,12 +301,11 @@ def task18_solve(graph, log_folder=None):
         reporter.add_page(header='Задание №18', image_path=None, comment=task18)
 
 
-
 def component_finder(start_node, visited, graph):
     visited[start_node] = True
     for i in range(len(graph.nodes)):
         if not visited[i] and graph.edges[start_node][i] is not None:
-            component_finder(i, visited)
+            component_finder(i, visited, graph)
 
 def task19_solve(graph, log_folder=None):
     components = 0
@@ -309,80 +323,200 @@ def task19_solve(graph, log_folder=None):
         reporter.add_page(header='Задание №19', image_path=None, comment=task19)
 
 
-#20
+def connectivity(graph):
+    edges_count = 0
+    fl = True
+    for i in (range(len(graph.nodes))):
+        for j in (range(len(graph.nodes))):
+            if graph.edges[i][j] is not None:
+                edges_count += 1
+            else:
+                if i == j:
+                    continue
+                fl = False
+                i = len(graph.nodes)
+                break
+    return fl, edges_count
 
 
+def task20_solve(graph, log_folder=None):
+    min_connectivity = len(graph.edges_list)
+    for i in (range(len(graph.nodes))):
+        for j in (range(len(graph.nodes))):
+            e_copy = []
+            for i in graph.edges:
+                r = []
+                for j in i:
+                    if j is None:
+                        r.append(None)
+                    else:
+                        r.append(j.copy())
+                e_copy.append(r)
+            a = solve(graph, None, i, j)
+            graph.edges = e_copy
+            min_connectivity = min(a, min_connectivity)
 
-"""
-edges_count = 0
-for i in (range(len(graph.nodes))):
-    for j in (range(len(graph.nodes))):
-        if graph.edges[i][j] is not None:
-            edges_count += 1
+    fl, u = connectivity(graph)
+    if fl:
+        task20 = "Граф сильно связный\n"
+    else:
+        task20 = "Граф слабо связный\n"
 
-if edges_count == 0:
-    task21 = "Граф пустой\n\n"
-elif edges_count == len(graph.nodes)**2:
-    task21 = "Граф полный\n\n"
-else:
-    task21 = "Граф ни пустой, ни полный\n\n"
-save_to_file(task21, path, '21')
+    task20 += "Связность графа: " + str(min_connectivity) + "\n\n"
+    if log_folder is not None:
+        save_to_file(task20, log_folder, '20')
+        reporter.add_page(header='Задание №20', image_path=None, comment=task20)
 
-nodes_degree = graph.get_node_degrees()
-#for i in graph.nodes:
- #   nodes_degree.append(graph.get_node_degrees(i))
 
-is_regular = True
-for i in (range(1, len(graph.nodes))):
-    if nodes_degree[i-1] != nodes_degree[i]:
-        is_regular = False
-        break
-if is_regular:
-    task22 = "Граф однородный\n\n"
-    task23 = "Граф регулярный, степень регулярности: " + str(nodes_degree[0]) + "\n\n"
-else:
-    task22 = "Граф не однородный\n\n"
-    task23 = "Граф не регулярный\n\n"
+def task21_solve(graph, log_folder=None):
+    fl, edges_count = connectivity(graph)
+    if edges_count == 0:
+        task21 = "Граф пустой\n\n"
+    elif fl:
+        task21 = "Граф полный\n\n"
+    else:
+        task21 = "Граф ни пустой, ни полный\n\n"
+    if log_folder is not None:
+        save_to_file(task21, log_folder, '21')
+        reporter.add_page(header='Задание №21', image_path=None, comment=task21)
 
-save_to_file(task22, path, '22')
-save_to_file(task23, path, '23')
 
-#24
+def task22_solve(graph, log_folder=None):
+    nodes_degree = graph.get_node_degrees()
+    is_regular = True
+    for i in (range(1, len(graph.nodes))):
+        if nodes_degree[i - 1] != nodes_degree[i]:
+            is_regular = False
+            break
+    if is_regular:
+        task22 = "Граф однородный\n\n"
+    else:
+        task22 = "Граф не однородный\n\n"
+    if log_folder is not None:
+        save_to_file(task22, log_folder, '22')
+        reporter.add_page(header='Задание №22', image_path=None, comment=task22)
 
-task25 = "\t" # писать вес или просто 1? и что делать с кратными ребрами?
-for i in (range(len(graph.nodes))):
-    task25 += str(i) + "\t"
-for i in (range(len(graph.nodes))):
-    task25 += "\n" + str(i) + "\t"
-    for j in (range(len(graph.nodes))):
-        if graph.edges[i][j] is not None:
-            task25 += str(graph.edges[i][j][0]) + "\t"
-        else:
-            task25 += "0\t"
-task25 += "\n\n"
-save_to_file(task25, path, '25')
 
-task26 = "\t"
-for i in range(len(graph.edges_list)):
-    task26 += str(i) + "\t"
-for i in (range(len(graph.nodes))):
-    task26 += "\n" + str(i) + "\t"
-    for j in range(len(graph.edges_list)):
-        if graph.edges_list[j][0] == i and graph.edges_list[j][1] != i:
-            task26 += "1\t"
-        elif graph.edges_list[j][1] == i and graph.edges_list[j][0] != i:
-            task26 += "-1\t"
-        else:
-            task26 += "0\t"
-task26 += "\n\n"
-save_to_file(task26, path, '26')
+def task23_solve(graph, log_folder=None):
+    nodes_degree = graph.get_node_degrees()
+    is_regular = True
+    for i in (range(1, len(graph.nodes))):
+        if nodes_degree[i - 1] != nodes_degree[i]:
+            is_regular = False
+            break
+    if is_regular:
+        task23 = "Граф регулярный, степень регулярности: " + str(nodes_degree[0]) + "\n\n"
+    else:
+        task23 = "Граф не регулярный\n\n"
+    if log_folder is not None:
+        save_to_file(task23, log_folder, '23')
+        reporter.add_page(header='Задание №23', image_path=None, comment=task23)
 
-#27
-"""
 
-def solve():
+def is_bipartite(start_node, nodes_color, graph):
+    nodes_color[start_node] = 1
+    queue = [start_node]
+    while len(queue) > 0:
+        start_node = queue[0]
+        queue = queue[1:]
+        for i in range(len(graph.nodes)):
+            if graph.edges[start_node][i] is not None:
+                if nodes_color[i] == nodes_color[start_node]:
+                    return False
+                if nodes_color[i] == 0:
+                    queue.append(i)
+                    nodes_color[i] = -nodes_color[start_node]
+    return True
+
+
+def task24_solve(graph, log_folder=None):
+    nodes_color = [0] * len(graph.nodes)
+    task24 = "Граф двудольный\n\n"
+    for i in range(len(graph.nodes)):
+        if nodes_color[i] == 0:
+            if not is_bipartite(i, nodes_color, graph):
+                task24 = "Граф не двудольный\n\n"
+                break
+    if log_folder is not None:
+        save_to_file(task24, log_folder, '24') # можно/возможно нужно вывести раскрашеный граф
+        reporter.add_page(header='Задание №24', image_path=None, comment=task24)
+
+
+def task25_solve(graph, log_folder=None):
+    task25 = "\t"  # писать вес или просто 1? и что делать с кратными ребрами?
+    for i in (range(len(graph.nodes))):
+        task25 += str(i) + "\t"
+    for i in (range(len(graph.nodes))):
+        task25 += "\n" + str(i) + "\t"
+        for j in (range(len(graph.nodes))):
+            if graph.edges[i][j] is not None:
+                task25 += "1\t" #str(graph.edges[i][j][0]) + "\t"
+            else:
+                task25 += "0\t"
+    task25 += "\n\n"
+    if log_folder is not None:
+        save_to_file(task25, log_folder, '25')
+        reporter.add_page(header='Задание №25', image_path=None, comment=task25)
+
+
+def task26_solve(graph, log_folder=None):
+    task26 = "\t"
+    for i in range(len(graph.edges_list)):
+        task26 += str(i) + "\t"
+    for i in (range(len(graph.nodes))):
+        task26 += "\n" + str(i) + "\t"
+        for j in range(len(graph.edges_list)):
+            if graph.edges_list[j][0] == i and graph.edges_list[j][1] != i:
+                task26 += "1\t"
+            elif graph.edges_list[j][1] == i and graph.edges_list[j][0] != i:
+                task26 += "-1\t"
+            else:
+                task26 += "0\t"
+    task26 += "\n\n"
+    if log_folder is not None:
+        save_to_file(task26, log_folder, '26')
+        reporter.add_page(header='Задание №26', image_path=None, comment=task26)
+
+def delete_isolated_nodes(neighbours, graph):
+    for i in neighbours:
+        edges = 0
+        for j in neighbours:
+            if i == j:
+                continue
+            if graph.edges[i][j] is not None or graph.edges[j][i] is not None:
+                edges += 1
+        if edges == 0:
+            neighbours.remove(i)
+
+
+def task27_solve(graph, log_folder=None):
+    subgraphs = []
+    while len(subgraphs) < 5:
+        neighbours = [i for i in range(len(graph.nodes)) if random.random() > 0.5]
+        delete_isolated_nodes(neighbours, graph)
+        while 3 < len(neighbours) > len(graph.nodes) - 3:
+            neighbours = [i for i in range(len(graph.nodes)) if random.random() > 0.5]
+            delete_isolated_nodes(neighbours, graph)
+        table = []
+        for i in range(len(neighbours)):
+            table.append([])
+            for j in range(len(neighbours)):
+                table[i].append([])
+                if graph.edges[neighbours[i]][neighbours[j]] is not None:
+                    table[i][j] = graph.edges[neighbours[i]][neighbours[j]]
+        subgraphs.append(LabGraph(neighbours, table))
+        subgraphs[-1].save_plot('D:/Education/DonNU/Discrete math/', 'sub' + str(len(subgraphs)))
+    if log_folder is not None:
+        #save_to_file(task27, log_folder, '27')
+        for i in range(5):
+            reporter.add_page(header='Задание №27', image_path=log_folder+'sub' + str(i+1)+'.png',
+                              comment='Подграф №'+str(i+1)+"\n\n\n\n")
+
+
+def solve_lab5():
     path = "D:/Education/DonNU/Discrete math/"  # '/home/san/Documents/university/babakov/lab5/'
     graph = get_graph_for_topic_not_1((path, 'topic_1_src'))
+    graph_copy = get_graph_for_topic_not_1((path, 'topic_1_src'))
     # log_folder = "D:/Education/DonNU/Discrete math/"
 
 
@@ -390,26 +524,31 @@ def solve():
     task2_solve(graph, path)
     task3_solve(graph, path)
     task4_solve(graph, path)
-    #task5_solve(graph, path)
+    task5_solve(graph, path)
     task6_solve(graph, path)
-    #task7_solve(graph, path)
+    task7_solve(graph, path)
     task8_solve(graph, path)
     task9_solve(graph, path)
     task10_solve(graph, path)
     task11_solve(graph, path)
     task12_solve(graph, path)
-    #task13_solve(graph, path)
+    task13_solve(graph, path)
+    task14_solve(graph, path)
+    graph = graph_copy
+    task15_solve(graph, path)
+    graph = graph_copy
+    #16-17
     task18_solve(graph, path)
-    #task19_solve(graph, path)
+    task19_solve(graph, path)
+    task20_solve(graph, path)
+    task21_solve(graph, path)
+    task22_solve(graph, path)
+    task23_solve(graph, path)
+    task24_solve(graph, path)
+    task25_solve(graph, path)
+    task26_solve(graph, path)
+    task27_solve(graph, path)
 
     reporter.save_report(path=path, report_name='lab5_report', create_new_page=False)
 
-solve()
-
-"""
-def task_8_10_12_solve(graph, log_folder=None):
-    task6 = 'Количество петель: {}\n\n'
-    if log_folder is not None:
-        save_to_file(task6, log_folder, '6')
-        reporter.add_page(header='Задание №6', image_path=None, comment=task6)
-"""
+solve_lab5()
