@@ -14,8 +14,9 @@ def watermark_img(input_file, output_file):
         background.save(filename=output_file)
 
 
-def add_step(document, header=None, image_path=None, watermark=False, comment=None):
-    document.add_page_break()
+def add_step(document, header=None, image_path=None, watermark=False, comment=None, ender_page_break=False):
+    if not ender_page_break:
+        document.add_page_break()
     if header is not None:
         document.add_paragraph(header, style='Intense Quote')
     if image_path is not None:
@@ -26,6 +27,8 @@ def add_step(document, header=None, image_path=None, watermark=False, comment=No
             document.add_picture(image_path)
     if comment is not None:
         document.add_paragraph(comment)
+    if ender_page_break:
+        document.add_page_break()
 
 
 def merge_documents(documents):
@@ -56,6 +59,7 @@ class PageReport:
         pass
 
 
+# TODO: add method for merging two files
 class Reporter:
     pages = None
 

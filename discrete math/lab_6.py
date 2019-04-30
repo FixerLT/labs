@@ -17,8 +17,7 @@ def bfs_solve(graph, node, log_folder=None):
     log = ''
     if log_folder is not None:
         graph.save_plot(log_folder, 'source_graph')
-        reporter.add_page(
-            PageReport(header='Алгоритм Поиска в Ширину. Исходный Граф', image_path=log_folder + 'source_graph.png'))
+        reporter.add_page(header='Алгоритм Поиска в Ширину. Исходный Граф', image_path=log_folder + 'source_graph.png')
     paths = [None] * len(graph.nodes)
     paths[node] = [node]
     visited = {node}

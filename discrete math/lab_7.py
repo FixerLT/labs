@@ -4,10 +4,11 @@ from data_structures import DisjointSetUnion
 from lab_8 import limit_nodes_by_degrees, save_graph_for_path
 from lab_6 import bfs_solve
 from docx_helper import Reporter
+from logs_helpers import get_log_for_path
 import os
 from logs_helpers import get_log_for_distance, get_log_for_path
-# TODO fucking lot of work with reports here
 # TODO: after reports done add semantic logs
+
 
 # TODO: remove unorientate if needed
 # TODO: work with connectivity component rather than all graph
@@ -90,6 +91,8 @@ def kruskal_solve(graph, log_folder=None, should_unorientate=True):
 
 
 def merge_loops_into_one(loop, loops, start):
+    if loop is None:
+        return None, False
     loop_set = set(loop)
     j = start
     united_loops = False
@@ -142,6 +145,13 @@ def extract_lines_loop(graph):
 
 
 def extract_loops(graph, log_folder=None):
+    if log_folder is not None and not os.path.exists(log_folder):
+        os.mkdir(log_folder)
+    graph.edges_list = table_to_edges_list(graph.edges)
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph_loops')
+        reporter.add_page(header='Извлечение Циклв из Графа', image_path=log_folder + 'source_graph_loops.png')
     loops = []
     for node in range(len(graph.nodes)):
         while True:
@@ -150,44 +160,95 @@ def extract_loops(graph, log_folder=None):
             for loop_end in range(len(graph.nodes)):
                 if paths[loop_end] is not None and graph.edges[loop_end][node] is not None and len(graph.edges[loop_end][node]) > 0:
                     loops.append(paths[loop_end])
+                    if log_folder is not None:
+                        save_graph_for_path(loops[-1] + [node], log_folder, len(loops), len(graph.nodes))
+                        reporter.add_page(header='Цикл {} Найден'.format(len(loops)),
+                                          image_path=log_folder + 'step_' + str(len(loops)) + '_path.png')
+                        # TODO: also save graph with path in stash for prettiness
                     graph.remove_loop(paths[loop_end])
                     found = True
                     break
             if not found:
                 break
     graph.edges_list = table_to_edges_list(graph.edges)
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'result_graph_loops')
+        reporter.add_page(header='Из Графа Извлечено {} Циклов'.format(len(loops)),
+                          image_path=log_folder +'result_graph_loops.png')
+        reporter.save_report(log_folder, 'loops')
     return loops
 
 
 def make_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
-    loops = extract_loops(graph)
+    if log_folder is not None and not os.path.exists(log_folder):
+        os.mkdir(log_folder)
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Сделать Граф Эйлеровым', image_path=log_folder + 'source_graph.png',
+                          comment='Ориентированный')
+    loops = extract_loops(graph, log_folder=log_folder + 'looops_extraction/')
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph_no_loops')
+        reporter.add_page(header='Сделать Граф Эйлеровым\nИсходный Граф', image_path=log_folder + 'source_graph_no_loops.png',
+                          comment='Циклов удалено: {}.'.format(len(loops)))
     merge_loops(loops)
+    if log_folder is not None:
+        comment = 'Циклы объеденены, теперь их {}:\n'.format(len(loops))
+        for loop in loops:
+            comment += get_log_for_path(loop) + '\n'
+        reporter.add_page(header='Результат объединения извлечённых циклов', comment=comment)
+    copy_of_graph = graph.copy()
     lines_loop, new_edges = extract_lines_loop(graph)
-    lines_loop = merge_loops_into_one(lines_loop, loops, 0)[0]
-    if lines_loop is None:
-        euler_path = []
+    if log_folder is not None:
+        if lines_loop is not None:
+            copy_of_graph.add_to_stash(e_stash_list=new_edges)
+            copy_of_graph.save_plot(log_folder, 'graph_with_extra_edges')
+            reporter.add_page(header='Сделан Последний Цикл', image_path=log_folder+'graph_with_extra_edges.png',
+                              comment='К оставшимся рёбрам добавлено минимальное количество ребёр({}), '.format(len(new_edges)) +
+                                      'чтобы они вместе образовывали один цикл.\nТеперь осталось объеденить все циклы в один')
+            copy_of_graph.edges_stash_list = None
+            copy_of_graph.edges_stash = None
+        else:
+            reporter.add_page(comment='Дополнительный цикл не требуется, ребёр после удаления цикла в графе не осталось')
+    lines_loop, united = merge_loops_into_one(lines_loop, loops, 0)
+    if lines_loop is not None:
+        loops.append(lines_loop)
+    if log_folder is not None:
+        if united:
+            reporter.add_page(comment='Некоторые циклы получилось добавить в последний цикл. '
+                                      'Теперь всего {} непересекающихся циклов.'.format(len(loops)))
+        else:
+            reporter.add_page(comment='Циклы не получилось добавить в последний цикл. '
+                                      'Теперь циклов всего {} непересекающихся циклов.'.format(len(loops)))
+    euler_path = []
+    if len(loops) > 0:
         for i, e in enumerate(loops):
             euler_path.extend(e)
             euler_path.append(e[0])  # because loop doesn't ends with first node, but there is edge e[-1], e[0]
-            new_edges.append((euler_path[-2], euler_path[-1], 1))
-        return new_edges, euler_path
+            new_edges.append((e[0], loops[(i+1) % len(loops)][0], 1))
     else:
-        euler_path = []
-        euler_path.extend(lines_loop)
-        for i, e in enumerate(loops):
-            new_edges.append((euler_path[-1], e[0], 1))
-            euler_path.extend(e)
-            euler_path.append(e[0])
-        euler_path.append(lines_loop[0])
-        new_edges.append((euler_path[-2], euler_path[-1], 1))
-        return new_edges, euler_path
+        euler_path = loops[0] + loops[0][0]
+    if log_folder is not None:
+        save_graph_for_path(euler_path, log_folder, 0, len(graph.nodes), prev_path=euler_path   )
+        reporter.add_page(header='Эйлеров Путь Сформирован', image_path=log_folder + 'step_0_path.png',
+                          comment='Всего добавлено {} новых рёбер\n'.format(len(new_edges)) + get_log_for_path(euler_path))
+        reporter.save_report(path=log_folder, report_name='form_euler_graph')
+    return new_edges, euler_path
 
 
 def best_node_to_connect_in_component(component, degrees):
     return min(component, key=lambda i: -1 if degrees[i] % 2 == 1 else degrees[i])
 
 
-def make_non_orientated_graph_eulerian_with_min_edges(graph):
+def make_non_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
+    if log_folder is not None and not os.path.exists(log_folder):
+        os.mkdir(log_folder)
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Сделать Граф Эйлеровым', image_path=log_folder + 'source_graph.png',
+                          comment='Неориентированный')
     degrees = graph.get_node_degrees(orientated=False)
     unused = [i for i, e in enumerate(degrees) if e == 0]
     connectivity_components = []
@@ -201,6 +262,12 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph):
         for k in component:
             connected.add(k)
         connectivity_components.append(component)
+    if log_folder is not None:
+        comment = 'Граф разделён на {} компонент связности:'.format(len(connectivity_components))
+        for cmp in connectivity_components:
+            comment += '\n' + str(cmp)
+        reporter.add_page(comment=comment)
+    new_edges = []
     while len(connectivity_components) > 1:
         node1 = best_node_to_connect_in_component(connectivity_components[-1], degrees)
         node2 = best_node_to_connect_in_component(connectivity_components[-2], degrees)
@@ -209,10 +276,20 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph):
         connectivity_components[-2] = connectivity_components[-2].intersection(connectivity_components[-1])
         connectivity_components.pop()
         graph.add_to_stash(e_stash_list=[(node1, node2, 1), (node2, node1, 1)])
-        graph.apply_stash()
+        new_edges.extend([(node1, node2, 1), (node2, node1, 1)])
+        # graph.apply_stash()
+    if log_folder is not None:
+        if len(new_edges) > 0:
+            graph.save_plot(folder=log_folder, filename='source_graph_connected')
+            reporter.add_page(header='Сделать Граф Эйлеровым', image_path=log_folder + 'source_graph_connected.png',
+                              comment='Добавлено {} новых рёбер, чтобы объеденить компоненты связности'.format(len(new_edges)/2))
 
+    removed_edges = []
     if len(graph.nodes) % 2 == 0:
         max_odds = [i for i, e in enumerate(degrees) if e == len(graph.nodes)-1]
+        if log_folder is not None and len(max_odds) > 0:
+            reporter.add_page(comment='Есть {} вершин с максимальной степенью: {}\n{}\n'
+                                      'Их степень необходимо понизить'.format(len(max_odds), len(graph.nodes)-1, max_odds))
         while len(max_odds) > 1:
             node1 = max_odds.pop()
             node2 = max_odds.pop()
@@ -220,60 +297,104 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph):
             graph.edges[node2][node1] = None
             degrees[node1] -= 1
             degrees[node2] -= 1
+            removed_edges.append((node1, node2, 1))
+            removed_edges.append((node2, node1, 1))
         if len(max_odds) > 0:
             node1 = max_odds.pop()
-            node2 = (node1+1) % graph.nodes
+            odds = [i for i, e in enumerate(degrees) if e % 2 == 1 and i != node1]
+            node2 = (node1+1) % graph.nodes if len(odds) == 0 else odds[0]
             graph.edges[node1][node2] = None
             graph.edges[node2][node1] = None
             degrees[node1] -= 1
             degrees[node2] -= 1
+            removed_edges.append((node1, node2, 1))
+            removed_edges.append((node2, node1, 1))
+        if log_folder is not None and len(removed_edges) > 0:
+            removed_graph = LabGraph(edges_list=removed_edges)
+            removed_graph.save_plot(log_folder, 'removed')
+            reporter.add_page(header='Удалённые Рёбра', image_path=log_folder+'removed.png')
 
     odds = [i for i, e in enumerate(degrees) if e % 2 == 1]
+    if log_folder is not None:
+        if len(odds) > 0:
+            reporter.add_page(comment='Осталось {} вершин с нечётными степенями:\n{}\n'.format(len(odds), odds) +
+                              '\nСоеденим их')
     while len(odds) > 1:
         node1 = odds.pop()
         node2 = odds.pop()
         degrees[node1] += 1
         degrees[node2] += 1
         graph.add_to_stash(e_stash_list=[(node1, node2, 1), (node2, node1, 1)])
-        graph.apply_stash()
+        new_edges.extend([(node1, node2, 1), (node2, node1, 1)])
+
+    if log_folder is not None:
+        graph.save_plot(folder=log_folder, filename='extended')
+        reporter.add_page(header='Рёбра Добавлены. Граф Эйлеров', image_path=log_folder+'extended.png')
+    graph.apply_stash()
+
+    # TODO: review next copied code
+    euler_path = [0]
+    neighbour_sets = [graph.get_neighbours(i) for i in range(len(graph.nodes))]
+    while sum([len(e) for e in neighbour_sets]) > 0:
+        node = euler_path[-1]
+        if node in neighbour_sets[node]:
+            euler_path.append(node)
+            neighbour_sets[node].remove(node)
+            graph.edges[node][node] = None
+        else:
+            for e in neighbour_sets[node]:
+                if not graph.is_bridge(node, e, orientated=False):
+                    euler_path.append(e)
+                    neighbour_sets[node].remove(e)
+                    neighbour_sets[e].remove(node)
+                    graph.edges[node][e] = None
+                    graph.edges[e][node] = None
+                    break
+    if log_folder is not None:
+        reporter.add_page(comment='Эйлеров путь найден: {}'.format(euler_path))
+        reporter.save_report(path=log_folder, report_name='euler_not_orientate')
 
 
 # TODO make pretty log pictures on each step. (or not pretty)
 # TODO if graph is not connected and orientated, solve problem for adding minimum edges
 def euler_path(graph, log_folder=None, orientated=False):
+    reporter = Reporter()
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph')
+        reporter.add_page(header='Эйлеров Путь\nИсходный Граф', image_path=log_folder + 'source_graph.png')
     if not orientated:
         graph.unorientate()
+        if log_folder is not None:
+            graph.save_plot(log_folder, 'source_graph_unorientate')
+            reporter.add_page(header='Эйлеров Путь\nНеориентированный Граф', image_path=log_folder + 'source_graph_unorientate.png')
     graph.apply_fn_to_edges(fn_connections=lambda e: [1] if e is not None else None)
+    if log_folder is not None:
+        graph.save_plot(log_folder, 'source_graph_unique')
+        reporter.add_page(header='Эйлеров Путь\nБез Кратных Рёбер', image_path=log_folder + 'source_graph_unique.png')
     for i in range(len(graph.nodes)):
-        graph.edges[i][i] = None # TODO learn to handle self-connected nodes
+        graph.edges[i][i] = None  # TODO learn to handle self-connected nodes
     degrees = graph.get_node_degrees(orientated=orientated)
     odds = [i for i, e in enumerate(degrees) if e % 2 == 1]
-    g_type = 'non_euler'
     if len(odds) == 0:
         g_type = 'euler'
+        reporter.add_page(header='Эйлеров Путь', comment='Граф Эйлеров\n0 вершин с нечётной степенью')
     elif len(odds) == 2:
         g_type = 'semi-euler'
-    if orientated:
-        make_orientated_graph_eulerian_with_min_edges(graph)
+        reporter.add_page(header='Эйлеров Путь',
+                          comment='Граф Полу-Эйлеров\n2 вершины с нечётной степенью\n' + str(odds))
     else:
-        make_non_orientated_graph_eulerian_with_min_edges(graph)
-    # useless
-    while len(odds) > 0:
-        node1 = odds.pop()
-        node2 = odds.pop()
-        if graph.edges[node1][node2] is not None:
-            graph.edges[node1][node2] = [1]
-            if not orientated:
-                graph.edges[node2][node1] = [1]
-            # graph.add_to_stash(e_stash_list=[(node1, node2, 1)])
-            # graph.apply_stash()
-        else:
-            graph.edges[node1][node2] = None
-            if not orientated:
-                graph.edges[node2][node1] = None
-            # graph.edges[node1][node2].pop()
-            # if len(graph.edges[node1][node2]) == 0:
-            #     graph.edges[node1][node2] = None
+        g_type = 'non_euler'
+        reporter.add_page(header='Эйлеров Путь',
+                          comment='Граф Полу-Эйлеров\nВершин с нечётной степенью: ' + str(len(odds)) + '\n' + str(odds))
+    copy_of_graph = graph.copy()
+    if orientated:
+        make_orientated_graph_eulerian_with_min_edges(copy_of_graph, log_folder=log_folder + 'make_oriented/')
+    else:
+        make_non_orientated_graph_eulerian_with_min_edges(copy_of_graph, log_folder=log_folder + 'make_oriented/')
+    if log_folder is not None and g_type is not 'euler':
+        graph.save_plot(log_folder, 'source_graph_euler')
+        reporter.add_page(header='Эйлеров Путь\nТеперь Эйлеров', image_path=log_folder + 'source_graph_euler.png')
+        reporter.save_report(path=log_folder, report_name='euler_preruquisite')
     path = [0]
     neighbour_sets = [graph.get_neighbours(i) for i in range(len(graph.nodes))]
     while sum([len(e) for e in neighbour_sets]) > 0:
@@ -406,3 +527,7 @@ def solve(source_graph, log_folder):
         f.write('the type of graph is ' + g_type + '\n')
         if path is not None:
             f.write('hamilton path is: ' + str(path) + '\n')
+
+
+if __name__ == '__main__':
+    solve(LabGraph(), '')

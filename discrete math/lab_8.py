@@ -1,7 +1,6 @@
 from my_graph import LabGraph
 from generate_lab58_graph import get_graph_for_topic_1
 from docx_helper import Reporter
-# TODO fucking lot of work with reports here
 
 
 def limit_nodes_by_degrees(graph, limit):
@@ -55,6 +54,7 @@ def log_for_iteration(graph, path, flow, f, folder, index, reporter):
                       comment='Результирующий поток: {}'.format(flow))
 
 
+# TODO add marks
 def solve_flows(graph, log_folder=None, start=None, end=None, different_start_end=None):
     if start is None or end is None:
         start, end = find_start_end(graph, must_differ=different_start_end)
@@ -91,8 +91,3 @@ def solve(source_graph, log_folder):
     limit_nodes_by_degrees(graph, 10)
     print(solve_flows(graph, log_folder=log_folder))
 
-
-# TODO single graph copy, don't create new graphs
-if __name__ == "__main__":
-    graph = get_graph_for_topic_1()
-    solve(graph, '/home/san/Documents/university/babakov/lab8/')

@@ -23,6 +23,6 @@ def solve_lab_8(graph):
 graph = get_graph_for_topic_1()
 # graph = get_graph_from_txt()
 
-# solve_lab_6(graph.copy())
+solve_lab_6(graph.copy())
 solve_lab_7(graph.copy())
 solve_lab_8(graph.copy())

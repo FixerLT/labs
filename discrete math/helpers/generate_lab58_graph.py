@@ -33,12 +33,13 @@ def make_graph_manually():
     return LabGraph(nodes, table)
 
 
-# TODO planar if possible
 # TODO 25 вершин, 100+ рёбер
 def get_graph_for_topic_1(test_save=None):
     nodes = ['Signal Bar', 'The Drinkery', 'Barrel Pub', 'BarDuck', 'Varvar Bar',
              'Beer.Live', 'Mugnum94', 'Pravda Beer Theatre', 'OLD BAR', 'Pilsner Bar',
-             'Black Bull Bar', 'MumuBar', 'CRAFT vs PUB', 'Steam Pub', 'Porter Pub']
+             # 'Black Bull Bar', 'MumuBar', 'CRAFT vs PUB', 'Steam Pub', 'Porter Pub',
+             # 'Vinsanto Wine bar', 'Bar N7', 'Rogue Bar', 'PR Bar', 'H Bar',
+             'TS Bar', 'Par Bar', 'Beer House', 'BeerFish', 'Beerwood']
     distances = []
     for i in range(len(nodes)):
         distances.append([])
