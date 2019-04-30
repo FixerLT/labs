@@ -45,7 +45,6 @@ def bfs_solve(graph, node, log_folder=None):
                                                  comment=log))
                     log = ''
         search_index += 1
-        to_visit.pop(0)
         log += log_finished.format(new_node)
     if log_folder is not None:
         with open(log_folder + 'logs.txt', 'w+') as f:
