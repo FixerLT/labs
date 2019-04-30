@@ -14,8 +14,8 @@ def watermark_img(input_file, output_file):
         background.save(filename=output_file)
 
 
-def add_step(document, header=None, image_path=None, watermark=False, comment=None, ender_page_break=False):
-    if not ender_page_break:
+def add_step(document, header=None, image_path=None, watermark=False, comment=None, create_new_page=True):
+    if create_new_page:
         document.add_page_break()
     if header is not None:
         document.add_paragraph(header, style='Intense Quote')
@@ -24,7 +24,7 @@ def add_step(document, header=None, image_path=None, watermark=False, comment=No
             watermark_img(image_path, '/home/san/Documents/university/babakov/test/watermark_tmp.png')
             document.add_picture('/home/san/Documents/university/babakov/test/watermark_tmp.png', width=Mm(140.5))
         else:
-            document.add_picture(image_path)
+            document.add_picture(image_path, width=Mm(140.5))#document.add_picture(image_path)
     if comment is not None:
         document.add_paragraph(comment)
     if ender_page_break:
@@ -63,11 +63,13 @@ class PageReport:
 class Reporter:
     pages = None
 
-    def save_report(self, path='/home/san/Documents/university/babakov/test/', report_name='report', watermark=True):
+    #'/home/san/Documents/university/babakov/test/'
+    def save_report(self, path="D:/Education/DonNU/Discrete math/", report_name='report',
+                    watermark=False, create_new_page=True):#watermark=True
         document = Document()
         for page in self.pages:
             add_step(document, header=page.header, image_path=page.image_path,
-                     watermark=watermark, comment=page.comment)
+                     watermark=watermark, comment=page.comment, create_new_page=create_new_page)
         document.save(path + report_name + '.docx')
 
     def add_page(self, page=None, header=None, image_path=None, comment=None):

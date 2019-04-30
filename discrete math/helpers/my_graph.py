@@ -37,8 +37,9 @@ def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style["vertex_label"] = g.vs["name"]
     visual_style["vertex_label_size"] = 28
     visual_style["vertex_name"] = g.vs["name"]
-    visual_style["edge_width"] = [1 + 0.2 * abs(w) for w in g.es['weight']]
-    visual_style["layout"] = g.layout('circle')
+    visual_style["edge_width"] = [2 for w in g.es['weight']]
+    #visual_style["edge_width"] = [1 + 0.2 * abs(w) for w in g.es['weight']]
+    visual_style["layout"] = g.layout('fr')#circle
     visual_style["edge_label_size"] = 20
     visual_style["edge_label_dist"] = 0
     visual_style["bbox"] = (1200, 1200)
