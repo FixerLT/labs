@@ -27,8 +27,8 @@ def add_step(document, header=None, image_path=None, watermark=False, comment=No
             document.add_picture(image_path, width=Mm(140.5))#document.add_picture(image_path)
     if comment is not None:
         document.add_paragraph(comment)
-    if ender_page_break:
-        document.add_page_break()
+    # if create_new_page:
+    #     document.add_page_break()
 
 
 def merge_documents(documents):

@@ -257,7 +257,7 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
         if e in connected:
             continue
         distances, paths = bfs_solve(graph, e)
-        component = {k for i, k in enumerate(distances) if k is not None}
+        component = {i for i, k in enumerate(distances) if k is not None}
         component.add(e)
         for k in component:
             connected.add(k)
@@ -336,6 +336,12 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
     euler_path = [0]
     neighbour_sets = [graph.get_neighbours(i) for i in range(len(graph.nodes))]
     while sum([len(e) for e in neighbour_sets]) > 0:
+        if log_folder is not None:
+            cp = LabGraph(graph.nodes, edges_list=table_to_edges_list(graph.edges))
+            for i in range(0, len(cp.edges)):
+                for j in range(i, len(cp.edges)):
+                    cp.edges[i][j] = None
+            cp.save_plot(folder=log_folder + 'debug/', filename='remove_edges_{}'.format(len(euler_path)))
         node = euler_path[-1]
         if node in neighbour_sets[node]:
             euler_path.append(node)
@@ -344,12 +350,19 @@ def make_non_orientated_graph_eulerian_with_min_edges(graph, log_folder=None):
         else:
             for e in neighbour_sets[node]:
                 if not graph.is_bridge(node, e, orientated=False):
+                    degrees[node] -= 1
+                    degrees[e] -= 1
                     euler_path.append(e)
-                    neighbour_sets[node].remove(e)
-                    neighbour_sets[e].remove(node)
-                    graph.edges[node][e] = None
-                    graph.edges[e][node] = None
+                    graph.edges[node][e].pop()
+                    if len(graph.edges[node][e]) == 0:
+                        graph.edges[node][e] = None
+                        neighbour_sets[node].remove(e)
+                    graph.edges[e][node].pop()
+                    if len(graph.edges[e][node]) == 0:
+                        graph.edges[e][node] = None
+                        neighbour_sets[e].remove(node)
                     break
+
     if log_folder is not None:
         reporter.add_page(comment='Эйлеров путь найден: {}'.format(euler_path))
         reporter.save_report(path=log_folder, report_name='euler_not_orientate')
@@ -364,6 +377,7 @@ def euler_path(graph, log_folder=None, orientated=False):
         reporter.add_page(header='Эйлеров Путь\nИсходный Граф', image_path=log_folder + 'source_graph.png')
     if not orientated:
         graph.unorientate()
+        graph.apply_fn_to_edges(lambda e: [e[0]] if e is not None and len(e) > 0 else None)
         if log_folder is not None:
             graph.save_plot(log_folder, 'source_graph_unorientate')
             reporter.add_page(header='Эйлеров Путь\nНеориентированный Граф', image_path=log_folder + 'source_graph_unorientate.png')
@@ -507,6 +521,7 @@ def solve(source_graph, log_folder):
             os.mkdir(log_folder + e)
     prima_solve(graph, log_folder=log_folder + sub_folders[0])
     kruskal_solve(graph, log_folder=log_folder + sub_folders[1])
+    # TODO MAKE FUCKING REPORTS FOR EULER
     graph = source_graph.copy()
     g_type, path = euler_path(graph, log_folder=log_folder + sub_folders[2], orientated=False)
     with open(log_folder + sub_folders[2] + 'euler_non_orientated_report.txt', 'w+') as f:

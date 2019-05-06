@@ -77,6 +77,7 @@ def solve_flows(graph, log_folder=None, start=None, end=None, different_start_en
     while path is not None:
         flow += f
         deleted = graph.reduce_edges(path, f, should_add_to_stash=True)
+        # graph.increase_edges(list(reversed(path)), f)
         if log_folder is not None:
             log_for_iteration(graph, path, flow, f, log_folder, it, reporter)
         it += 1

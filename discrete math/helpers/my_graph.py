@@ -1,6 +1,8 @@
 from igraph import *
 
 def add_edges_to_table(table, edges_list):
+    if edges_list is None:
+        return
     for e in edges_list:
         if len(table) <= e[0] or len(table) <= e[1]:
             raise Exception('wrong list indexing')
@@ -26,7 +28,7 @@ def table_to_edges_list(table):
         for j in range(len(table)):
             if table[i][j] is not None:
                 for e in table[i][j]:
-                    edges.append((i, j, e))
+                    edges.append([i, j, e])
     return edges
 
 
@@ -39,7 +41,7 @@ def best_visual_style(g, edges_sz, stash_sz, vertexes_sz):
     visual_style["vertex_name"] = g.vs["name"]
     visual_style["edge_width"] = [2 for w in g.es['weight']]
     #visual_style["edge_width"] = [1 + 0.2 * abs(w) for w in g.es['weight']]
-    visual_style["layout"] = g.layout('fr')#circle
+    visual_style["layout"] = g.layout('circle')#g.layout('fr')
     visual_style["edge_label_size"] = 20
     visual_style["edge_label_dist"] = 0
     visual_style["bbox"] = (1200, 1200)
@@ -87,7 +89,8 @@ class LabGraph:
             degrees.append([])
             degrees[-1] = sum([len(e if e is not None else []) for e in self.edges[i]])
             if orientated:
-                degrees[-1] += sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
+                adder = sum([len(self.edges[j][i] if self.edges[j][i] is not None else []) for j in range(len(self.nodes))])
+                degrees[-1] += adder if adder != degrees[-1] else 0
             else:
                 if self.edges[i][i] is not None:
                     degrees[-1] += len(self.edges[i][i])
@@ -123,6 +126,8 @@ class LabGraph:
     def is_bridge(self, node1, node2, orientated=False):
         if sum([1 for e in self.edges[node1] if e is None or len(e) == 0]) >= len(self.nodes)-1:
             return False
+        if not orientated and len(self.edges[node1][node2]) > 1:
+            return False
         to_visit = [node2]
         visited = set(to_visit)
         while len(to_visit) > 0:
@@ -156,6 +161,8 @@ class LabGraph:
                 self.edges_stash_list.extend(e_stash_list)
 
     def apply_stash(self):
+        if self.edges_stash_list is None:
+            return
         add_edges_to_table(self.edges, self.edges_stash_list)
         self.edges_list.extend(self.edges_stash_list)
         self.edges_stash = None
@@ -176,12 +183,14 @@ class LabGraph:
                     self.edges[i][j] = self.edges[j][i].copy()
                 elif self.edges[i][j] is not None:
                     self.edges[j][i] = self.edges[i][j].copy()
+        self.edges_list = table_to_edges_list(self.edges)
 
     def apply_fn_to_edges(self, fn_connections):
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
                 if self.edges[i][j] is not None:
                     self.edges[i][j] = fn_connections(self.edges[i][j])
+        self.edges_list = table_to_edges_list(self.edges)
 
     def remove_nodes(self, nodes):  # not appliable to stash
         new_indexes = {}
@@ -276,6 +285,17 @@ class LabGraph:
             if len(self.edges[edge_from][edge_to]) == 0:
                 self.edges[edge_from][edge_to] = None
         return deleted
+
+    def increase_edges(self, path, val):
+        for i in range(len(path) - 1):
+            edge_from = path[i]
+            edge_to = path[i+1]
+            if self.edges[edge_from][edge_to] is not None and len(self.edges[edge_from][edge_to]) > 0:
+                self.edges[edge_from][edge_to][0] += val
+            else:
+                self.add_to_stash(e_stash_list=[[edge_from, edge_to, val]])
+                self.apply_stash()
+                # self.edges[edge_from][edge_to] = [val]
 
     def __init__(self, nodes, edges=None, edges_list=None):
         self.nodes = nodes

@@ -55,15 +55,20 @@ def get_graph_for_topic_1(test_save=None):
     return graph
 
 
-def get_graph_from_txt(file_path = '/home/san/Coding/Py/projects/DNO_labs_rep/labs/discrete math/helpers/alex_graph.txt'):
+def get_graph_from_txt(file_path='/home/san/Coding/Py/projects/DNO_labs_rep/labs/discrete math/helpers/alex_graph.txt',
+                       reduce_edges=False, has_distances=False):
     lines = open(file_path, 'r').readlines()
     nodes_amount = int(lines[0])
     edges_amount = int(lines[1])
     distance_fn = lambda a, b: abs(a - b) + (a+b)%7
     lines[2:2+edges_amount] = [line.replace('\n', '') for line in lines[2:2+edges_amount]]
     edges_list = [line.split(' ') for line in lines[2:2+edges_amount]]
-    edges_list = [(int(a), (int(b)), distance_fn(int(a), int(b))) for a, b in edges_list]
-    distances_set = set([c for _, _, c in edges_list])
+    if has_distances:
+        edges_list = [(int(a), int(b), int(c)) for a, b, c in edges_list]
+    else:
+        edges_list = [(int(a), (int(b)), distance_fn(int(a), int(b))) for a, b in edges_list]
+    if reduce_edges:
+        edges_list = [(a-1, b-1, c) for a, b, c in edges_list]
     # print('edges generated {}/{}'.format(len(distances_set), edges_amount))
     nodes = [str(i) for i in range(nodes_amount)]
     return LabGraph(nodes, edges_list=edges_list)

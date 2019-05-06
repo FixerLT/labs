@@ -1,4 +1,4 @@
-from generate_lab58_graph import get_graph_for_topic_1, get_graph_from_txt
+from generate_lab58_graph import get_graph_for_topic_1, get_graph_from_txt, make_graph_manually
 import lab_6
 import lab_7
 import lab_8
@@ -20,9 +20,11 @@ def solve_lab_8(graph):
     print(lab_8.solve(graph, path))
 
 
-graph = get_graph_for_topic_1()
-# graph = get_graph_from_txt()
+# graph = get_graph_for_topic_1()
+graph = get_graph_from_txt(file_path='/home/san/Coding/Py/projects/DNO_labs_rep/labs/discrete math/helpers/alex_graph.txt',
+                           reduce_edges=False, has_distances=False)
+# graph = make_graph_manually()
 
-solve_lab_6(graph.copy())
+# solve_lab_6(graph.copy())
 solve_lab_7(graph.copy())
-solve_lab_8(graph.copy())
+# solve_lab_8(graph.copy())
