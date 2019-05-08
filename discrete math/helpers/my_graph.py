@@ -165,8 +165,12 @@ class LabGraph:
             return
         add_edges_to_table(self.edges, self.edges_stash_list)
         self.edges_list.extend(self.edges_stash_list)
+        self.clear_stash()
+
+    def clear_stash(self):
         self.edges_stash = None
         self.edges_stash_list = None
+
 
     def unorientate(self, duplicate=True):
         for i in range(len(self.nodes)):

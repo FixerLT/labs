@@ -2,7 +2,7 @@ from generate_lab58_graph import get_graph_for_topic_1, get_graph_from_txt, make
 import lab_6
 import lab_7
 import lab_8
-src_path = '/home/san/Documents/university/babakov/'
+src_path = '/home/mark/Documents/university/babakov/'
 
 
 def solve_lab_6(graph):
@@ -21,10 +21,10 @@ def solve_lab_8(graph):
 
 
 # graph = get_graph_for_topic_1()
-graph = get_graph_from_txt(file_path='/home/san/Coding/Py/projects/DNO_labs_rep/labs/discrete math/helpers/alex_graph.txt',
-                           reduce_edges=False, has_distances=False)
+graph = get_graph_from_txt(file_path='/home/mark/Coding/py/projects/DNOLABS/labs/discrete math/helpers/alex_graph.txt',
+                           reduce_edges=False, has_distances=True)
 # graph = make_graph_manually()
 
 # solve_lab_6(graph.copy())
 solve_lab_7(graph.copy())
-# solve_lab_8(graph.copy())
+solve_lab_8(graph.copy())

@@ -14,3 +14,10 @@ def get_log_for_path(path):
     for e in path[1:]:
         path_string += ' -> ' + str(e)
     return 'Путь: ' + path_string + '\n'
+
+
+def get_log_for_edge(edge, include_weight=False):
+    log = '{} => {}'
+    log_weight = '{} => {} (вес {})'
+    return log.format(edge[0], edge[1]) if not include_weight else log_weight.format(edge[0], edge[1], edge[2])
+
